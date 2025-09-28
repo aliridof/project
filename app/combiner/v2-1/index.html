@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced AI Project Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            color: #2c3e50;
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .upload-area {
+            border: 3px dashed #3498db;
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            background: #ecf0f1;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover {
+            border-color: #2980b9;
+            background: #d6dbdf;
+        }
+
+        .upload-area.drag-over {
+            border-color: #27ae60;
+            background: #d5f4e6;
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .upload-area h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .browse-link {
+            color: #3498db;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .supported-formats {
+            margin-top: 15px;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        .uploaded-files {
+            margin-top: 20px;
+        }
+
+        .uploaded-files h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .files-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #bdc3c7;
+            border-radius: 8px;
+            padding: 10px;
+            background: white;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            background: #ecf0f1;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            transition: background 0.2s;
+        }
+
+        .file-item:hover {
+            background: #d6dbdf;
+        }
+
+        .file-icon {
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        .file-name {
+            flex: 1;
+            color: #2c3e50;
+            font-weight: 500;
+            font-size: 0.9em;
+        }
+
+        .file-size {
+            color: #7f8c8d;
+            font-size: 0.8em;
+            margin-right: 10px;
+        }
+
+        .mention-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 0.8em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mention-btn:hover {
+            background: #2980b9;
+        }
+
+        /* Analysis Section */
+        .analysis-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        #analysisPrompt {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            font-size: 1em;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        #analysisPrompt:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .file-mention-tools {
+            margin-bottom: 20px;
+        }
+
+        .file-mention-tools label {
+            display: block;
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .file-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .file-mention-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 6px 12px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .file-mention-btn:hover {
+            background: #c0392b;
+        }
+
+        .analyze-btn, .generate-btn {
+            width: 100%;
+            padding: 15px;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+        }
+
+        .analyze-btn {
+            background: #27ae60;
+        }
+
+        .analyze-btn:hover {
+            background: #219653;
+            transform: translateY(-2px);
+        }
+
+        .generate-btn {
+            background: #f39c12;
+        }
+
+        .generate-btn:hover {
+            background: #e67e22;
+            transform: translateY(-2px);
+        }
+
+        .analyze-btn:disabled, .generate-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .download-btn {
+            width: 100%;
+            padding: 15px;
+            background: #9b59b6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .download-btn:hover:not(:disabled) {
+            background: #8e44ad;
+            transform: translateY(-2px);
+        }
+
+        .download-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* AI Prompt Section */
+        .ai-prompt-section {
+            background: #fff3cd;
+            border: 2px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .ai-prompt-section h3 {
+            color: #856404;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ai-prompt-content {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+
+        .prompt-placeholder {
+            color: #7f8c8d;
+            font-style: italic;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        /* Results Section */
+        .results-section {
+            margin-top: 30px;
+        }
+
+        .results-section h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .results-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #bdc3c7;
+            border-radius: 8px;
+            padding: 15px;
+            background: white;
+        }
+
+        .placeholder {
+            text-align: center;
+            color: #7f8c8d;
+            padding: 40px 20px;
+        }
+
+        .analysis-result {
+            border: 1px solid #3498db;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #ecf0f1;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #bdc3c7;
+        }
+
+        .result-title {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .result-time {
+            color: #7f8c8d;
+            font-size: 0.8em;
+        }
+
+        .result-content {
+            color: #2c3e50;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .copy-btn, .clear-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: background 0.2s;
+        }
+
+        .copy-btn {
+            background: #3498db;
+            color: white;
+        }
+
+        .copy-btn:hover {
+            background: #2980b9;
+        }
+
+        .clear-btn {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .clear-btn:hover {
+            background: #c0392b;
+        }
+
+        .copy-prompt-btn {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.2s;
+        }
+
+        .copy-prompt-btn:hover {
+            background: #138496;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            header h1 {
+                font-size: 1.8em;
+            }
+        }
+
+        /* Scrollbar Styling */
+        .files-list::-webkit-scrollbar,
+        .results-container::-webkit-scrollbar,
+        .ai-prompt-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .files-list::-webkit-scrollbar-track,
+        .results-container::-webkit-scrollbar-track,
+        .ai-prompt-content::-webkit-scrollbar-track {
+            background: #ecf0f1;
+            border-radius: 3px;
+        }
+
+        .files-list::-webkit-scrollbar-thumb,
+        .results-container::-webkit-scrollbar-thumb,
+        .ai-prompt-content::-webkit-scrollbar-thumb {
+            background: #3498db;
+            border-radius: 3px;
+        }
+
+        .files-list::-webkit-scrollbar-thumb:hover,
+        .results-container::-webkit-scrollbar-thumb:hover,
+        .ai-prompt-content::-webkit-scrollbar-thumb:hover {
+            background: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧠 Enhanced AI Project Analyzer</h1>
+            <p>Upload project, generate AI-ready prompts, dan dapatkan kode yang sudah diupgrade</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Upload Section -->
+            <section class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <h3>Drop project files here</h3>
+                    <p>atau <span class="browse-link">browse files</span></p>
+                    <input type="file" id="fileInput" multiple webkitdirectory directory>
+                    <div class="supported-formats">
+                        📄 Supported: .js, .html, .css, .md, .txt, .json, .py, .tsx, .ts
+                    </div>
+                </div>
+                
+                <div class="uploaded-files" id="uploadedFiles" style="display: none;">
+                    <h4>📋 Files Terupload:</h4>
+                    <div class="files-list" id="filesList"></div>
+                </div>
+            </section>
+
+            <!-- Analysis Section -->
+            <section class="analysis-section">
+                <div class="analysis-controls">
+                    <div class="input-group">
+                        <label for="analysisPrompt">[Permintaan]</label>
+                        <textarea 
+                            id="analysisPrompt" 
+                            placeholder="Contoh: Tambahkan fitur autosave, perbaiki bug di fungsi login, upgrade ke modern ES6 syntax, tambahkan error handling..."
+                            rows="4"
+                        ></textarea>
+                    </div>
+
+                    <div class="file-mention-tools">
+                        <label>📁 Mention Files:</label>
+                        <div class="file-buttons" id="fileButtons"></div>
+                    </div>
+
+                    <button id="generateBtn" class="generate-btn">
+                        🚀 Generate AI Report
+                    </button>
+
+                    <button id="downloadBtn" class="download-btn" disabled>
+                        [Download]
+                    </button>
+                </div>
+
+                <div class="results-section">
+                    <h4>📊 Hasil Analisa:</h4>
+                    <div class="results-container" id="resultsContainer">
+                        <div class="placeholder">
+                            🚀 Upload project dan klik "Generate AI Report" untuk mulai
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- AI Prompt Section -->
+        <section class="ai-prompt-section" id="aiPromptSection" style="display: none;">
+            <h3>🤖 AI-Ready Prompt (Copy & Paste ke AI)</h3>
+            <div class="ai-prompt-content" id="aiPromptContent">
+                <div class="prompt-placeholder">
+                    Generate AI Prompt akan muncul di sini...
+                </div>
+            </div>
+            <button class="copy-prompt-btn" id="copyPromptBtn">
+                📋 Copy Full Prompt untuk AI
+            </button>
+        </section>
+
+        <!-- Templates -->
+        <template id="fileItemTemplate">
+            <div class="file-item">
+                <span class="file-icon">📄</span>
+                <span class="file-name"></span>
+                <span class="file-size"></span>
+                <button class="mention-btn" title="Mention file ini">@</button>
+            </div>
+        </template>
+
+        <template id="resultTemplate">
+            <div class="analysis-result">
+                <div class="result-header">
+                    <span class="result-title"></span>
+                    <span class="result-time"></span>
+                </div>
+                <div class="result-content"></div>
+                <div class="result-actions">
+                    <button class="copy-btn">📋 Copy</button>
+                    <button class="clear-btn">🗑️ Hapus</button>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <script>
+        class EnhancedAIAnalyzer {
+            constructor() {
+                this.uploadedFiles = new Map();
+                this.analysisHistory = [];
+                this.currentAnalysis = null;
+                this.currentAIPrompt = null;
+                this.initializeEventListeners();
+            }
+
+            initializeEventListeners() {
+                // File input handling
+                const fileInput = document.getElementById('fileInput');
+                const uploadArea = document.getElementById('uploadArea');
+                const generateBtn = document.getElementById('generateBtn');
+                const downloadBtn = document.getElementById('downloadBtn');
+                const copyPromptBtn = document.getElementById('copyPromptBtn');
+
+                // Drag and drop functionality
+                uploadArea.addEventListener('click', () => fileInput.click());
+                uploadArea.addEventListener('dragover', this.handleDragOver.bind(this));
+                uploadArea.addEventListener('dragleave', this.handleDragLeave.bind(this));
+                uploadArea.addEventListener('drop', this.handleDrop.bind(this));
+
+                // File input change
+                fileInput.addEventListener('change', this.handleFileSelect.bind(this));
+
+                // Buttons
+                generateBtn.addEventListener('click', this.generateAIReport.bind(this));
+                downloadBtn.addEventListener('click', this.downloadAIReadyReport.bind(this));
+                copyPromptBtn.addEventListener('click', this.copyAIPrompt.bind(this));
+            }
+
+            handleDragOver(e) {
+                e.preventDefault();
+                document.getElementById('uploadArea').classList.add('drag-over');
+            }
+
+            handleDragLeave(e) {
+                e.preventDefault();
+                document.getElementById('uploadArea').classList.remove('drag-over');
+            }
+
+            handleDrop(e) {
+                e.preventDefault();
+                document.getElementById('uploadArea').classList.remove('drag-over');
+                
+                const files = Array.from(e.dataTransfer.files);
+                this.processFiles(files);
+            }
+
+            handleFileSelect(e) {
+                const files = Array.from(e.target.files);
+                this.processFiles(files);
+            }
+
+            async processFiles(files) {
+                const textFiles = files.filter(file => 
+                    file.type.startsWith('text/') || 
+                    file.name.match(/\.(js|html|css|md|txt|json|py|tsx|ts|jsx|vue|php|java|cpp|c|go|rs|rb|swift)$/i)
+                );
+
+                for (const file of textFiles) {
+                    try {
+                        const content = await this.readFileContent(file);
+                        this.uploadedFiles.set(file.name, {
+                            name: file.name,
+                            content: content,
+                            size: file.size,
+                            type: file.type,
+                            path: file.webkitRelativePath || file.name
+                        });
+                    } catch (error) {
+                        console.error(`Error reading file ${file.name}:`, error);
+                    }
+                }
+
+                this.updateFileList();
+                this.updateFileButtons();
+            }
+
+            readFileContent(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.onerror = (e) => reject(e);
+                    reader.readAsText(file);
+                });
+            }
+
+            updateFileList() {
+                const filesList = document.getElementById('filesList');
+                const template = document.getElementById('fileItemTemplate');
+                
+                filesList.innerHTML = '';
+
+                this.uploadedFiles.forEach((file, filename) => {
+                    const clone = template.content.cloneNode(true);
+                    const fileItem = clone.querySelector('.file-item');
+                    
+                    fileItem.querySelector('.file-name').textContent = filename;
+                    fileItem.querySelector('.file-size').textContent = this.formatFileSize(file.size);
+                    
+                    const mentionBtn = fileItem.querySelector('.mention-btn');
+                    mentionBtn.addEventListener('click', () => this.mentionFile(filename));
+                    
+                    filesList.appendChild(clone);
+                });
+
+                // Show/hide uploaded files section
+                const uploadedFilesSection = document.getElementById('uploadedFiles');
+                uploadedFilesSection.style.display = this.uploadedFiles.size > 0 ? 'block' : 'none';
+            }
+
+            updateFileButtons() {
+                const fileButtons = document.getElementById('fileButtons');
+                fileButtons.innerHTML = '';
+
+                this.uploadedFiles.forEach((file, filename) => {
+                    const button = document.createElement('button');
+                    button.className = 'file-mention-btn';
+                    button.textContent = filename;
+                    button.title = `Mention ${filename} dalam analisa`;
+                    button.addEventListener('click', () => this.mentionFile(filename));
+                    fileButtons.appendChild(button);
+                });
+            }
+
+            mentionFile(filename) {
+                const promptTextarea = document.getElementById('analysisPrompt');
+                const currentText = promptTextarea.value;
+                const mentionText = `@${filename}`;
+                
+                if (currentText.includes(mentionText)) {
+                    return; // Already mentioned
+                }
+
+                const newText = currentText ? `${currentText} ${mentionText}` : mentionText;
+                promptTextarea.value = newText;
+                promptTextarea.focus();
+            }
+
+            formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            // NEW: Generate AI-ready prompt and analysis report
+            async generateAIReport() {
+                const prompt = document.getElementById('analysisPrompt').value.trim();
+                
+                if (!prompt) {
+                    alert('Silakan masukkan permintaan upgrade/perbaikan terlebih dahulu!');
+                    return;
+                }
+
+                if (this.uploadedFiles.size === 0) {
+                    alert('Silakan upload file project terlebih dahulu!');
+                    return;
+                }
+
+                const generateBtn = document.getElementById('generateBtn');
+                generateBtn.disabled = true;
+                generateBtn.textContent = '🚀 Generating AI Report...';
+
+                try {
+                    // Generate AI Prompt
+                    const aiPrompt = await this.createAIPrompt(prompt);
+                    this.currentAIPrompt = aiPrompt;
+                    this.displayAIPrompt(aiPrompt);
+                    
+                    // Perform analysis
+                    const analysis = await this.performAnalysis(prompt);
+                    this.currentAnalysis = analysis;
+                    this.analysisHistory.push(analysis);
+                    this.displayAnalysisResult(analysis);
+                    
+                    // Enable download button
+                    document.getElementById('downloadBtn').disabled = false;
+                    
+                    // Show AI prompt section
+                    document.getElementById('aiPromptSection').style.display = 'block';
+                } catch (error) {
+                    console.error('AI Report generation error:', error);
+                    alert('Terjadi kesalahan saat membuat AI report: ' + error.message);
+                } finally {
+                    generateBtn.disabled = false;
+                    generateBtn.textContent = '🚀 Generate AI Report';
+                }
+            }
+
+            async createAIPrompt(userRequest) {
+                // Simulate processing delay
+                await new Promise(resolve => setTimeout(resolve, 1500));
+
+                const mentionedFiles = this.extractMentionedFiles(userRequest);
+                const projectContext = this.buildProjectContext(mentionedFiles);
+                
+                return {
+                    userRequest: userRequest,
+                    projectStructure: this.getProjectStructure(),
+                    fileContents: projectContext.fileContents,
+                    analysisResults: this.performQuickAnalysis(projectContext),
+                    aiPromptText: this.buildAIPromptText(userRequest, projectContext),
+                    timestamp: new Date().toLocaleString()
+                };
+            }
+
+            buildAIPromptText(userRequest, projectContext) {
+                let promptText = `Saya memiliki project dengan struktur dan kode berikut. Tolong ${userRequest}\n\n`;
+                
+                promptText += `=== PROJECT STRUCTURE ===\n`;
+                promptText += this.generateStructureTree(this.getProjectStructure()) + '\n\n';
+                
+                promptText += `=== FILE CONTENTS ===\n`;
+                Object.entries(projectContext.fileContents).forEach(([filename, content]) => {
+                    promptText += `--- ${filename} ---\n`;
+                    const lines = content.split('\n');
+                    lines.forEach((line, index) => {
+                        promptText += `${(index + 1).toString().padStart(3)}: ${line}\n`;
+                    });
+                    promptText += '\n';
+                });
+                
+                promptText += `=== PERMINTAAN ===\n`;
+                promptText += `${userRequest}\n\n`;
+                
+                promptText += `=== INSTRUKSI UNTUK AI ===\n`;
+                promptText += `Tolong berikan kode lengkap yang sudah diupdate untuk setiap file. `;
+                promptText += `Format response dengan clearly separated sections untuk setiap file, `;
+                promptText += `sehingga saya bisa langsung copy-paste kode untuk mengganti content file yang ada.\n\n`;
+                
+                promptText += `Berikan dalam format:\n`;
+                promptText += `=== FILENAME.EXT ===\n`;
+                promptText += `[complete updated code here]\n\n`;
+                promptText += `=== NEXT_FILENAME.EXT ===\n`;
+                promptText += `[complete updated code here]\n\n`;
+                
+                return promptText;
+            }
+
+            performQuickAnalysis(context) {
+                let analysis = {
+                    totalFiles: Object.keys(context.fileContents).length,
+                    totalLines: 0,
+                    fileTypes: new Set(),
+                    issues: [],
+                    recommendations: []
+                };
+
+                Object.entries(context.fileContents).forEach(([filename, content]) => {
+                    const lines = content.split('\n').length;
+                    analysis.totalLines += lines;
+                    
+                    const ext = filename.split('.').pop();
+                    analysis.fileTypes.add(ext);
+                    
+                    // Quick issue detection
+                    if (filename.endsWith('.js') && content.includes('var ')) {
+                        analysis.issues.push(`${filename}: Uses 'var' instead of 'let/const'`);
+                    }
+                    if (content.includes('TODO') || content.includes('FIXME')) {
+                        analysis.issues.push(`${filename}: Contains TODO/FIXME comments`);
+                    }
+                    if (lines > 500) {
+                        analysis.issues.push(`${filename}: Large file (${lines} lines)`);
+                    }
+                });
+
+                return analysis;
+            }
+
+            displayAIPrompt(aiPrompt) {
+                const aiPromptContent = document.getElementById('aiPromptContent');
+                aiPromptContent.textContent = aiPrompt.aiPromptText;
+            }
+
+            copyAIPrompt() {
+                if (!this.currentAIPrompt) {
+                    alert('Tidak ada AI prompt untuk dicopy!');
+                    return;
+                }
+
+                navigator.clipboard.writeText(this.currentAIPrompt.aiPromptText).then(() => {
+                    const btn = document.getElementById('copyPromptBtn');
+                    btn.textContent = '✅ Copied! Paste ke AI sekarang';
+                    setTimeout(() => {
+                        btn.textContent = '📋 Copy Full Prompt untuk AI';
+                    }, 3000);
+                });
+            }
+
+            // NEW: Download AI-ready report
+            downloadAIReadyReport() {
+                if (!this.currentAIPrompt) {
+                    alert('Tidak ada AI prompt untuk didownload! Generate AI report terlebih dahulu.');
+                    return;
+                }
+
+                const reportContent = this.generateAIReadyReportContent();
+                const blob = new Blob([reportContent], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                
+                a.href = url;
+                a.download = `ai-ready-prompt-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            generateAIReadyReportContent() {
+                return this.currentAIPrompt.aiPromptText;
+            }
+
+            extractMentionedFiles(prompt) {
+                const mentions = prompt.match(/@(\S+)/g) || [];
+                return mentions.map(mention => mention.substring(1)); // Remove @ symbol
+            }
+
+            buildProjectContext(mentionedFiles) {
+                const context = {
+                    allFiles: Array.from(this.uploadedFiles.keys()),
+                    mentionedFiles: {},
+                    projectStructure: this.getProjectStructure(),
+                    fileContents: {}
+                };
+
+                if (mentionedFiles.length === 0) {
+                    // If no specific files mentioned, include all files
+                    this.uploadedFiles.forEach((file, filename) => {
+                        context.mentionedFiles[filename] = file.content;
+                        context.fileContents[filename] = file.content;
+                    });
+                } else {
+                    // Only include mentioned files
+                    mentionedFiles.forEach(filename => {
+                        if (this.uploadedFiles.has(filename)) {
+                            context.mentionedFiles[filename] = this.uploadedFiles.get(filename).content;
+                            context.fileContents[filename] = this.uploadedFiles.get(filename).content;
+                        }
+                    });
+                }
+
+                return context;
+            }
+
+            getProjectStructure() {
+                const structure = {};
+                
+                this.uploadedFiles.forEach((file, filename) => {
+                    const path = file.path || filename;
+                    const parts = path.split('/');
+                    let current = structure;
+                    
+                    for (let i = 0; i < parts.length; i++) {
+                        const part = parts[i];
+                        if (i === parts.length - 1) {
+                            // File
+                            current[part] = {
+                                type: 'file',
+                                size: file.size,
+                                path: path
+                            };
+                        } else {
+                            // Folder
+                            if (!current[part] || current[part].type !== 'folder') {
+                                current[part] = {
+                                    type: 'folder',
+                                    children: {}
+                                };
+                            }
+                            current = current[part].children;
+                        }
+                    }
+                });
+                
+                return structure;
+            }
+
+            generateStructureTree(structure, indent = 0) {
+                let tree = '';
+                const prefix = '  '.repeat(indent);
+                
+                for (const [name, item] of Object.entries(structure)) {
+                    if (item.type === 'folder') {
+                        tree += `${prefix}📁 ${name}/\n`;
+                        tree += this.generateStructureTree(item.children, indent + 1);
+                    } else {
+                        tree += `${prefix}📄 ${name} (${this.formatFileSize(item.size)})\n`;
+                    }
+                }
+                
+                return tree;
+            }
+
+            async performAnalysis(prompt) {
+                // Simulate API call delay
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                const mentionedFiles = this.extractMentionedFiles(prompt);
+                const projectContext = this.buildProjectContext(mentionedFiles);
+                
+                return {
+                    title: '📊 Hasil Analisa Project',
+                    content: this.generateAnalysisResponse(prompt, projectContext),
+                    prompt: prompt,
+                    timestamp: new Date().toLocaleString(),
+                    mentionedFiles: mentionedFiles,
+                    projectContext: projectContext
+                };
+            }
+
+            generateAnalysisResponse(prompt, context) {
+                const fileList = Object.keys(context.mentionedFiles).join(', ');
+                
+                return `ANALYSIS REQUEST: ${prompt}
+
+PROJECT CONTEXT:
+- Total Files: ${context.allFiles.length}
+- Files Analyzed: ${fileList}
+
+DETAILED ANALYSIS:
+${this.generateDetailedAnalysis(prompt, context)}
+
+RECOMMENDATIONS:
+${this.generateRecommendations(context)}
+
+NEXT STEPS:
+- Implementasikan perubahan yang disarankan
+- Test functionality setelah perubahan
+- Review ulang architecture jika diperlukan
+
+CATATAN:
+Analisa ini berdasarkan pattern dan best practices umum. 
+Selalu test perubahan di environment development terlebih dahulu.`;
+            }
+
+            generateDetailedAnalysis(prompt, context) {
+                let analysis = '';
+
+                Object.entries(context.mentionedFiles).forEach(([filename, content]) => {
+                    analysis += `\n--- ANALYSIS FOR: ${filename} ---\n`;
+                    
+                    // Simple analysis based on file type and content
+                    if (filename.endsWith('.js') || filename.endsWith('.ts') || filename.endsWith('.jsx') || filename.endsWith('.tsx')) {
+                        analysis += this.analyzeJavaScriptFile(content);
+                    } else if (filename.endsWith('.html')) {
+                        analysis += this.analyzeHTMLFile(content);
+                    } else if (filename.endsWith('.css')) {
+                        analysis += this.analyzeCSSFile(content);
+                    } else {
+                        analysis += `File type: ${filename.split('.').pop()}\n`;
+                        analysis += `Lines: ${content.split('\n').length}\n`;
+                        analysis += `Size: ${content.length} characters\n`;
+                    }
+
+                    // Check for common issues
+                    analysis += this.checkCommonIssues(filename, content);
+                });
+
+                return analysis;
+            }
+
+            analyzeJavaScriptFile(content) {
+                const lines = content.split('\n');
+                const functions = content.match(/function\s+(\w+)|const\s+(\w+)\s*=\s*\(|let\s+(\w+)\s*=\s*\(/g) || [];
+                const classes = content.match(/class\s+(\w+)/g) || [];
+                
+                return `JavaScript/TypeScript Analysis:
+- Total Lines: ${lines.length}
+- Functions Found: ${functions.length}
+- Classes Found: ${classes.length}
+- Code Structure: ${lines.length > 100 ? 'Complex' : 'Simple'}
+- Potential Issues: ${this.checkJSIssues(content)}`;
+            }
+
+            analyzeHTMLFile(content) {
+                const elements = content.match(/<\/?(\w+)/g) || [];
+                const uniqueElements = [...new Set(elements)].length;
+                
+                return `HTML Analysis:
+- Total Elements: ${elements.length}
+- Unique Elements: ${uniqueElements}
+- Structure Complexity: ${elements.length > 50 ? 'High' : 'Medium'}`;
+            }
+
+            analyzeCSSFile(content) {
+                const rules = content.match(/([^{]+\{[^}]+\})/g) || [];
+                const selectors = content.match(/([^{]+)\{/g) || [];
+                
+                return `CSS Analysis:
+- Total Rules: ${rules.length}
+- Selectors: ${selectors.length}
+- Specificity Analysis: Standard`;
+            }
+
+            checkJSIssues(content) {
+                const issues = [];
+                
+                if (content.includes('console.log')) {
+                    issues.push('Debug statements found');
+                }
+                if (content.includes('var ')) {
+                    issues.push('Using var instead of let/const');
+                }
+                if (content.includes('==') && !content.includes('===')) {
+                    issues.push('Using loose equality operator');
+                }
+                
+                return issues.length > 0 ? issues.join(', ') : 'No major issues found';
+            }
+
+            checkCommonIssues(filename, content) {
+                const issues = [];
+                
+                // Large file check
+                if (content.length > 10000) {
+                    issues.push('File terlalu besar, pertimbangkan untuk split');
+                }
+                
+                // Long lines check
+                const longLines = content.split('\n').filter(line => line.length > 120);
+                if (longLines.length > 5) {
+                    issues.push('Banyak line yang terlalu panjang');
+                }
+                
+                return issues.length > 0 ? `\nISSUES: ${issues.join('; ')}` : '\nNo major structural issues';
+            }
+
+            generateRecommendations(context) {
+                let recommendations = [];
+                
+                Object.entries(context.mentionedFiles).forEach(([filename, content]) => {
+                    if ((filename.endsWith('.js') || filename.endsWith('.ts')) && content.length > 5000) {
+                        recommendations.push(`Pertimbangkan untuk memecah file ${filename} menjadi modul yang lebih kecil`);
+                    }
+                    
+                    if (content.includes('var ')) {
+                        recommendations.push(`Ganti 'var' dengan 'let/const' di file ${filename}`);
+                    }
+                    
+                    if (content.includes('==') && !content.includes('===')) {
+                        recommendations.push(`Gunakan '===' instead of '==' di file ${filename}`);
+                    }
+                });
+                
+                if (recommendations.length === 0) {
+                    recommendations.push('Struktur kode sudah baik, pertahankan!');
+                }
+                
+                return recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n');
+            }
+
+            displayAnalysisResult(analysis) {
+                const resultsContainer = document.getElementById('resultsContainer');
+                const template = document.getElementById('resultTemplate');
+                
+                const clone = template.content.cloneNode(true);
+                const resultElement = clone.querySelector('.analysis-result');
+                
+                resultElement.querySelector('.result-title').textContent = analysis.title;
+                resultElement.querySelector('.result-time').textContent = analysis.timestamp;
+                resultElement.querySelector('.result-content').textContent = analysis.content;
+                
+                // Add event listeners to buttons
+                const copyBtn = resultElement.querySelector('.copy-btn');
+                const clearBtn = resultElement.querySelector('.clear-btn');
+                
+                copyBtn.addEventListener('click', () => {
+                    navigator.clipboard.writeText(analysis.content).then(() => {
+                        copyBtn.textContent = '✅ Copied!';
+                        setTimeout(() => {
+                            copyBtn.textContent = '📋 Copy';
+                        }, 2000);
+                    });
+                });
+                
+                clearBtn.addEventListener('click', () => {
+                    resultElement.remove();
+                    // If no results left, show placeholder
+                    if (resultsContainer.children.length === 0) {
+                        resultsContainer.innerHTML = '<div class="placeholder">🚀 Upload project dan klik "Generate AI Report" untuk mulai</div>';
+                    }
+                });
+                
+                // Remove placeholder if it exists
+                const placeholder = resultsContainer.querySelector('.placeholder');
+                if (placeholder) {
+                    placeholder.remove();
+                }
+                
+                resultsContainer.prepend(resultElement);
+                resultsContainer.scrollTop = 0;
+            }
+        }
+
+        // Initialize the application when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new EnhancedAIAnalyzer();
+        });
+    </script>
+</body>
+</html>

@@ -16,9 +16,12 @@ class StreakHistoryManager {
     filterStreakHistory(streakHistory, threshold) {
         try {
             const thresholdValue = parseInt(threshold, 10);
-            if (isNaN(thresholdValue) return [];
-            
-            return streakHistory.filter(entry => entry.streak >= thresholdValue);
+            if (isNaN(thresholdValue)) return [];
+
+            if (!Array.isArray(streakHistory)) return [];
+
+            // Only keep entries with a numeric streak and meeting the threshold
+            return streakHistory.filter(entry => Number.isFinite(entry.streak) && entry.streak >= thresholdValue);
         } catch (error) {
             ErrorHandler.handleError(error, 'Failed to filter streak history');
             return [];
@@ -37,9 +40,18 @@ class StreakHistoryManager {
                 streakHistoryContent.removeChild(streakHistoryContent.firstChild);
             }
 
-            if (filteredHistory.length === 0) {
-                noStreakHistory.textContent = 'Belum ada Streak History';
-                streakHistoryContent.appendChild(noStreakHistory);
+            if (!Array.isArray(filteredHistory) || filteredHistory.length === 0) {
+                // Avoid reusing the same DOM node instance; clone if available, otherwise create a new element
+                let emptyEl;
+                if (noStreakHistory && typeof noStreakHistory.cloneNode === 'function') {
+                    emptyEl = noStreakHistory.cloneNode(true);
+                    emptyEl.textContent = 'Belum ada Streak History';
+                } else {
+                    emptyEl = document.createElement('div');
+                    emptyEl.className = 'no-streak-history';
+                    emptyEl.textContent = 'Belum ada Streak History';
+                }
+                streakHistoryContent.appendChild(emptyEl);
             } else {
                 // Group by timestamp
                 const groupedHistory = this.groupByTimestamp(filteredHistory);
@@ -58,10 +70,11 @@ class StreakHistoryManager {
         const grouped = {};
         
         history.forEach(entry => {
-            if (!grouped[entry.timestamp]) {
-                grouped[entry.timestamp] = [];
+            const key = entry.timestamp || 'unknown';
+            if (!grouped[key]) {
+                grouped[key] = [];
             }
-            grouped[entry.timestamp].push(entry);
+            grouped[key].push(entry);
         });
         
         return grouped;
