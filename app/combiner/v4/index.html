@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Enhanced AI Project Analyzer</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
@@ -45,7 +45,7 @@
                     </div>
 
                     <div class="file-mention-tools">
-                        <label>🔍 Mention Files:</label>
+                        <label>📍 Mention Files:</label>
                         <div class="file-buttons" id="fileButtons"></div>
                     </div>
 
@@ -57,21 +57,26 @@
                         💾 Download AI-Ready Report
                     </button>
                 </div>
+
+                <!-- AI Prompt & Results Section -->
+                <div class="ai-prompt-section" id="aiPromptSection" style="display: none;">
+                    <h3>🤖 AI-Ready Prompt & Hasil Analisa</h3>
+                    <div class="results-container" id="resultsContainer">
+                        <div class="placeholder">
+                            🚀 Upload project dan klik "GENERATE" untuk mulai
+                        </div>
+                    </div>
+                    <div class="ai-prompt-content" id="aiPromptContent">
+                        <div class="prompt-placeholder">
+                            AI Prompt akan muncul di sini setelah generate...
+                        </div>
+                    </div>
+                    <button class="copy-prompt-btn" id="copyPromptBtn">
+                        📋 Copy Full Prompt untuk AI
+                    </button>
+                </div>
             </section>
         </div>
-
-        <!-- AI Prompt Section -->
-        <section class="ai-prompt-section" id="aiPromptSection" style="display: none;">
-            <h3>🤖 AI-Ready Prompt & Analysis Results</h3>
-            <div class="ai-prompt-content" id="aiPromptContent">
-                <div class="prompt-placeholder">
-                    Generate AI Prompt akan muncul di sini...
-                </div>
-            </div>
-            <button class="copy-prompt-btn" id="copyPromptBtn">
-                📋 Copy Full Prompt untuk AI
-            </button>
-        </section>
 
         <!-- Templates -->
         <template id="fileItemTemplate">
@@ -80,6 +85,20 @@
                 <span class="file-name"></span>
                 <span class="file-size"></span>
                 <button class="mention-btn" title="Mention file ini">@</button>
+            </div>
+        </template>
+
+        <template id="resultTemplate">
+            <div class="analysis-result">
+                <div class="result-header">
+                    <span class="result-title"></span>
+                    <span class="result-time"></span>
+                </div>
+                <div class="result-content"></div>
+                <div class="result-actions">
+                    <button class="copy-btn">📋 Copy</button>
+                    <button class="clear-btn">🗑️ Hapus</button>
+                </div>
             </div>
         </template>
     </div>

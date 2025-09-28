@@ -1,12 +1,10 @@
 'use strict';
 
-/**
- * Enhanced AI Project Analyzer
- * Simplified version with combined prompt generation and analysis
- */
 class EnhancedAIAnalyzer {
     constructor() {
         this.uploadedFiles = new Map();
+        this.analysisHistory = [];
+        this.currentAnalysis = null;
         this.currentAIPrompt = null;
         this.supportedExtensions = new Set([
             'js', 'html', 'css', 'md', 'txt', 'json', 'py', 'tsx', 
@@ -15,58 +13,28 @@ class EnhancedAIAnalyzer {
         ]);
         this.initializeEventListeners();
         this.setupKeyboardShortcuts();
-        this.restoreLastSession();
     }
 
-    /**
-     * Initialize all event listeners with proper error handling
-     */
     initializeEventListeners() {
-        try {
-            // Cache DOM elements
-            this.elements = {
-                fileInput: document.getElementById('fileInput'),
-                uploadArea: document.getElementById('uploadArea'),
-                generateBtn: document.getElementById('generateBtn'),
-                downloadBtn: document.getElementById('downloadBtn'),
-                copyPromptBtn: document.getElementById('copyPromptBtn'),
-                analysisPrompt: document.getElementById('analysisPrompt'),
-                filesList: document.getElementById('filesList'),
-                fileButtons: document.getElementById('fileButtons'),
-                uploadedFiles: document.getElementById('uploadedFiles'),
-                aiPromptSection: document.getElementById('aiPromptSection'),
-                aiPromptContent: document.getElementById('aiPromptContent')
-            };
+        // Cache DOM elements
+        this.elements = {
+            fileInput: document.getElementById('fileInput'),
+            uploadArea: document.getElementById('uploadArea'),
+            generateBtn: document.getElementById('generateBtn'),
+            downloadBtn: document.getElementById('downloadBtn'),
+            copyPromptBtn: document.getElementById('copyPromptBtn'),
+            analysisPrompt: document.getElementById('analysisPrompt'),
+            filesList: document.getElementById('filesList'),
+            fileButtons: document.getElementById('fileButtons'),
+            resultsContainer: document.getElementById('resultsContainer'),
+            uploadedFiles: document.getElementById('uploadedFiles'),
+            aiPromptSection: document.getElementById('aiPromptSection'),
+            aiPromptContent: document.getElementById('aiPromptContent')
+        };
 
-            // Validate required elements
-            const missingElements = Object.entries(this.elements)
-                .filter(([key, element]) => !element)
-                .map(([key]) => key);
-            
-            if (missingElements.length > 0) {
-                throw new Error(`Missing DOM elements: ${missingElements.join(', ')}`);
-            }
-
-            this.setupDragAndDrop();
-            this.setupFileHandling();
-            this.setupButtons();
-            this.setupAutoSave();
-
-        } catch (error) {
-            console.error('Initialization error:', error);
-            this.showMessage('Error initializing application: ' + error.message, 'error');
-        }
-    }
-
-    /**
-     * Setup drag and drop functionality with proper event handling
-     */
-    setupDragAndDrop() {
+        // Drag and drop functionality with throttling
         let dragCounter = 0;
-        
-        this.elements.uploadArea.addEventListener('click', () => {
-            this.elements.fileInput.click();
-        });
+        this.elements.uploadArea.addEventListener('click', () => this.elements.fileInput.click());
         
         this.elements.uploadArea.addEventListener('dragenter', (e) => {
             e.preventDefault();
@@ -94,64 +62,33 @@ class EnhancedAIAnalyzer {
             this.elements.uploadArea.classList.remove('drag-over');
             this.handleDrop(e);
         });
-    }
 
-    /**
-     * Setup file handling events
-     */
-    setupFileHandling() {
+        // File input change
         this.elements.fileInput.addEventListener('change', this.handleFileSelect.bind(this));
-    }
 
-    /**
-     * Setup button event listeners with debouncing
-     */
-    setupButtons() {
-        this.elements.generateBtn.addEventListener('click', 
-            this.debounce(this.generateCombinedOutput.bind(this), 300)
-        );
-        
-        this.elements.downloadBtn.addEventListener('click', 
-            this.debounce(this.downloadAIReadyReport.bind(this), 300)
-        );
-        
-        this.elements.copyPromptBtn.addEventListener('click', 
-            this.copyAIPrompt.bind(this)
-        );
-    }
+        // Buttons with debouncing
+        this.elements.generateBtn.addEventListener('click', this.debounce(this.generateAIPrompt.bind(this), 300));
+        this.elements.downloadBtn.addEventListener('click', this.debounce(this.downloadAIReadyReport.bind(this), 300));
+        this.elements.copyPromptBtn.addEventListener('click', this.copyAIPrompt.bind(this));
 
-    /**
-     * Setup auto-save functionality using memory storage
-     */
-    setupAutoSave() {
-        this.elements.analysisPrompt.addEventListener('input', 
-            this.debounce(() => {
-                // Use in-memory storage instead of localStorage for artifact compatibility
-                this.lastPrompt = this.elements.analysisPrompt.value;
-            }, 500)
-        );
-    }
+        // Auto-save prompt to localStorage
+        this.elements.analysisPrompt.addEventListener('input', this.debounce(() => {
+            localStorage.setItem('lastPrompt', this.elements.analysisPrompt.value);
+        }, 500));
 
-    /**
-     * Restore last session from memory (if available)
-     */
-    restoreLastSession() {
-        if (this.lastPrompt) {
-            this.elements.analysisPrompt.value = this.lastPrompt;
+        // Restore last prompt
+        const lastPrompt = localStorage.getItem('lastPrompt');
+        if (lastPrompt) {
+            this.elements.analysisPrompt.value = lastPrompt;
         }
     }
 
-    /**
-     * Setup keyboard shortcuts for better UX
-     */
     setupKeyboardShortcuts() {
         document.addEventListener('keydown', (e) => {
-            // Ctrl/Cmd + Enter to generate
+            // Ctrl/Cmd + Enter to generate AI prompt
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                 e.preventDefault();
-                if (!this.elements.generateBtn.disabled) {
-                    this.elements.generateBtn.click();
-                }
+                this.elements.generateBtn.click();
             }
             // Ctrl/Cmd + S to download
             if ((e.ctrlKey || e.metaKey) && e.key === 's') {
@@ -163,9 +100,6 @@ class EnhancedAIAnalyzer {
         });
     }
 
-    /**
-     * Debounce utility function
-     */
     debounce(func, wait) {
         let timeout;
         return function executedFunction(...args) {
@@ -178,34 +112,23 @@ class EnhancedAIAnalyzer {
         };
     }
 
-    /**
-     * Handle drag and drop file traversal
-     */
     async handleDrop(e) {
-        try {
-            const items = e.dataTransfer.items;
-            const files = [];
-            
-            for (let i = 0; i < items.length; i++) {
-                const item = items[i];
-                if (item.kind === 'file') {
-                    const entry = item.webkitGetAsEntry();
-                    if (entry) {
-                        await this.traverseFileTree(entry, files);
-                    }
+        const items = e.dataTransfer.items;
+        const files = [];
+        
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            if (item.kind === 'file') {
+                const entry = item.webkitGetAsEntry();
+                if (entry) {
+                    await this.traverseFileTree(entry, files);
                 }
             }
-            
-            await this.processFiles(files);
-        } catch (error) {
-            console.error('Drop handling error:', error);
-            this.showMessage('Error processing dropped files: ' + error.message, 'error');
         }
+        
+        this.processFiles(files);
     }
 
-    /**
-     * Recursively traverse file tree for directories
-     */
     async traverseFileTree(item, files, path = "") {
         return new Promise((resolve) => {
             if (item.isFile) {
@@ -217,85 +140,65 @@ class EnhancedAIAnalyzer {
             } else if (item.isDirectory) {
                 const dirReader = item.createReader();
                 dirReader.readEntries(async (entries) => {
-                    try {
-                        for (let entry of entries) {
-                            await this.traverseFileTree(entry, files, path + item.name + "/");
-                        }
-                        resolve();
-                    } catch (error) {
-                        console.error('Directory traversal error:', error);
-                        resolve();
+                    for (let entry of entries) {
+                        await this.traverseFileTree(entry, files, path + item.name + "/");
                     }
+                    resolve();
                 });
             }
         });
     }
 
-    /**
-     * Handle file input selection
-     */
     handleFileSelect(e) {
         const files = Array.from(e.target.files);
         this.processFiles(files);
     }
 
-    /**
-     * Process and validate uploaded files
-     */
     async processFiles(files) {
-        try {
-            const textFiles = files.filter(file => this.isValidFile(file));
-            const totalSize = textFiles.reduce((sum, file) => sum + file.size, 0);
-            
-            // Check total size limit (10MB)
-            if (totalSize > 10 * 1024 * 1024) {
-                this.showMessage('Total ukuran file melebihi 10MB. Silakan pilih file yang lebih kecil.', 'error');
-                return;
+        const textFiles = files.filter(file => this.isValidFile(file));
+        const totalSize = textFiles.reduce((sum, file) => sum + file.size, 0);
+        
+        // Check total size limit (10MB)
+        if (totalSize > 10 * 1024 * 1024) {
+            this.showMessage('Total ukuran file melebihi 10MB. Silakan pilih file yang lebih kecil.', 'error');
+            return;
+        }
+
+        const promises = textFiles.map(async (file) => {
+            try {
+                const content = await this.readFileContent(file);
+                const filePath = file.fullPath || file.webkitRelativePath || file.name;
+                
+                return {
+                    name: file.name,
+                    content: content,
+                    size: file.size,
+                    type: file.type || this.getMimeType(file.name),
+                    path: filePath
+                };
+            } catch (error) {
+                console.error(`Error reading file ${file.name}:`, error);
+                return null;
             }
+        });
 
-            const filePromises = textFiles.map(async (file) => {
-                try {
-                    const content = await this.readFileContent(file);
-                    const filePath = file.fullPath || file.webkitRelativePath || file.name;
-                    
-                    return {
-                        name: file.name,
-                        content: content,
-                        size: file.size,
-                        type: file.type || this.getMimeType(file.name),
-                        path: filePath
-                    };
-                } catch (error) {
-                    console.error(`Error reading file ${file.name}:`, error);
-                    return null;
-                }
-            });
+        const results = await Promise.all(promises);
+        const validResults = results.filter(r => r !== null);
 
-            const results = await Promise.all(filePromises);
-            const validResults = results.filter(r => r !== null);
+        // Clear existing files and add new ones
+        this.uploadedFiles.clear();
+        validResults.forEach(fileData => {
+            this.uploadedFiles.set(fileData.name, fileData);
+        });
 
-            // Update uploaded files collection
-            this.uploadedFiles.clear();
-            validResults.forEach(fileData => {
-                this.uploadedFiles.set(fileData.name, fileData);
-            });
-
-            this.updateFileList();
-            this.updateFileButtons();
-            
-            if (validResults.length > 0) {
-                this.showMessage(`${validResults.length} file berhasil diupload`, 'success');
-            }
-
-        } catch (error) {
-            console.error('File processing error:', error);
-            this.showMessage('Error processing files: ' + error.message, 'error');
+        this.updateFileList();
+        this.updateFileButtons();
+        
+        if (validResults.length > 0) {
+            this.showMessage(`${validResults.length} file berhasil diupload`, 'success');
         }
     }
 
-    /**
-     * Check if file is valid for processing
-     */
     isValidFile(file) {
         const extension = file.name.split('.').pop().toLowerCase();
         return this.supportedExtensions.has(extension) || 
@@ -303,9 +206,6 @@ class EnhancedAIAnalyzer {
                file.size < 1024 * 1024; // Allow small files regardless of extension
     }
 
-    /**
-     * Get MIME type based on file extension
-     */
     getMimeType(filename) {
         const ext = filename.split('.').pop().toLowerCase();
         const mimeTypes = {
@@ -327,33 +227,24 @@ class EnhancedAIAnalyzer {
         return mimeTypes[ext] || 'text/plain';
     }
 
-    /**
-     * Read file content asynchronously
-     */
     readFileContent(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = (e) => resolve(e.target.result);
-            reader.onerror = (e) => reject(new Error('Failed to read file'));
+            reader.onerror = (e) => reject(e);
             reader.readAsText(file);
         });
     }
 
-    /**
-     * Update file list display
-     */
     updateFileList() {
         const template = document.getElementById('fileItemTemplate');
-        if (!template) {
-            console.error('File item template not found');
-            return;
-        }
-
         this.elements.filesList.innerHTML = '';
+
         const fragment = document.createDocumentFragment();
         
         this.uploadedFiles.forEach((file, filename) => {
             const clone = template.content.cloneNode(true);
+            const fileItem = clone.querySelector('.file-item');
             
             clone.querySelector('.file-name').textContent = filename;
             clone.querySelector('.file-name').title = file.path || filename;
@@ -369,9 +260,6 @@ class EnhancedAIAnalyzer {
         this.elements.uploadedFiles.style.display = this.uploadedFiles.size > 0 ? 'block' : 'none';
     }
 
-    /**
-     * Update file mention buttons
-     */
     updateFileButtons() {
         this.elements.fileButtons.innerHTML = '';
         const fragment = document.createDocumentFragment();
@@ -388,9 +276,6 @@ class EnhancedAIAnalyzer {
         this.elements.fileButtons.appendChild(fragment);
     }
 
-    /**
-     * Add file mention to textarea
-     */
     mentionFile(filename) {
         const currentText = this.elements.analysisPrompt.value;
         const mentionText = `@${filename}`;
@@ -400,14 +285,12 @@ class EnhancedAIAnalyzer {
             this.elements.analysisPrompt.value = newText;
             this.elements.analysisPrompt.focus();
             
-            // Trigger auto-save
-            this.lastPrompt = newText;
+            // Trigger input event for auto-save
+            const event = new Event('input', { bubbles: true });
+            this.elements.analysisPrompt.dispatchEvent(event);
         }
     }
 
-    /**
-     * Format file size for display
-     */
     formatFileSize(bytes) {
         if (bytes === 0) return '0 Bytes';
         const k = 1024;
@@ -416,36 +299,24 @@ class EnhancedAIAnalyzer {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
-    /**
-     * Show message with auto-dismiss
-     */
     showMessage(text, type = 'info') {
         const message = document.createElement('div');
         message.className = `message ${type}`;
         message.textContent = text;
-        
-        // Insert at the top of AI prompt section if visible, otherwise in main content
-        const targetContainer = this.elements.aiPromptSection.style.display !== 'none' 
-            ? this.elements.aiPromptSection 
-            : this.elements.uploadArea.parentNode;
-            
-        targetContainer.insertBefore(message, targetContainer.firstChild);
+        this.elements.resultsContainer.insertBefore(message, this.elements.resultsContainer.firstChild);
         
         setTimeout(() => {
             message.style.opacity = '0';
             setTimeout(() => message.remove(), 300);
-        }, 4000);
+        }, 3000);
     }
 
-    /**
-     * MAIN FUNCTION: Generate combined AI prompt and analysis
-     * This replaces the separate analyze and generate functions
-     */
-    async generateCombinedOutput() {
+    // Generate AI-ready prompt
+    async generateAIPrompt() {
         const prompt = this.elements.analysisPrompt.value.trim();
         
         if (!prompt) {
-            this.showMessage('Silakan masukkan permintaan terlebih dahulu!', 'error');
+            this.showMessage('Silakan masukkan permintaan upgrade/perbaikan terlebih dahulu!', 'error');
             return;
         }
 
@@ -454,33 +325,28 @@ class EnhancedAIAnalyzer {
             return;
         }
 
-        this.setButtonLoading(this.elements.generateBtn, true, '🚀 Generating...');
+        this.setButtonLoading(this.elements.generateBtn, true, '🚀 Generating AI Prompt...');
 
         try {
-            // Generate comprehensive AI prompt with analysis
-            const combinedResult = await this.createCombinedAIPrompt(prompt);
-            this.currentAIPrompt = combinedResult;
-            this.displayCombinedResult(combinedResult);
+            const aiPrompt = await this.createAIPrompt(prompt);
+            this.currentAIPrompt = aiPrompt;
+            this.displayAIPrompt(aiPrompt);
             
             // Enable download button
             this.elements.downloadBtn.disabled = false;
             
-            // Show AI prompt section
+            // Show AI prompt section with animation
             this.elements.aiPromptSection.style.display = 'block';
             
-            this.showMessage('AI Prompt dan Analisis berhasil dibuat!', 'success');
-            
+            this.showMessage('AI Prompt berhasil dibuat!', 'success');
         } catch (error) {
-            console.error('Generation error:', error);
-            this.showMessage('Terjadi kesalahan: ' + error.message, 'error');
+            console.error('AI Prompt generation error:', error);
+            this.showMessage('Terjadi kesalahan saat membuat AI prompt: ' + error.message, 'error');
         } finally {
             this.setButtonLoading(this.elements.generateBtn, false, '🚀 GENERATE');
         }
     }
 
-    /**
-     * Set button loading state
-     */
     setButtonLoading(button, loading, text) {
         button.disabled = loading;
         if (loading) {
@@ -490,55 +356,37 @@ class EnhancedAIAnalyzer {
         }
     }
 
-    /**
-     * Create comprehensive AI prompt with integrated analysis
-     */
-    async createCombinedAIPrompt(userRequest) {
-        // Simulate processing time for better UX
-        await this.delay(1200);
+    async createAIPrompt(userRequest) {
+        // Simulate processing with actual work
+        await this.delay(800);
 
         const mentionedFiles = this.extractMentionedFiles(userRequest);
         const projectContext = this.buildProjectContext(mentionedFiles);
-        const analysisResults = this.performComprehensiveAnalysis(projectContext);
+        const analysisResults = this.performQuickAnalysis(projectContext);
         
         return {
             userRequest: userRequest,
             projectStructure: this.getProjectStructure(),
             fileContents: projectContext.fileContents,
             analysisResults: analysisResults,
-            combinedPromptText: this.buildCombinedPromptText(userRequest, projectContext, analysisResults),
+            aiPromptText: this.buildAIPromptText(userRequest, projectContext, analysisResults),
             timestamp: new Date().toLocaleString('id-ID')
         };
     }
 
-    /**
-     * Build comprehensive prompt text combining request and analysis
-     */
-    buildCombinedPromptText(userRequest, projectContext, analysisResults) {
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    buildAIPromptText(userRequest, projectContext, analysisResults) {
         const cleanRequest = userRequest.replace(/@\S+/g, '').trim();
         let promptText = `Saya memiliki project dengan struktur dan kode berikut. Tolong ${cleanRequest}\n\n`;
         
-        // Add analysis summary first
-        promptText += `=== ANALYSIS SUMMARY ===\n`;
-        promptText += `Total Files: ${analysisResults.totalFiles}\n`;
-        promptText += `Total Lines: ${analysisResults.totalLines}\n`;
-        promptText += `File Types: ${Array.from(analysisResults.fileTypes).join(', ')}\n`;
-        promptText += `Code Quality Score: ${this.calculateQualityScore(analysisResults)}/100\n\n`;
-        
-        // Add issues found
+        // Add optimization notes if issues found
         if (analysisResults.issues.length > 0) {
             promptText += `=== ISSUES YANG DITEMUKAN ===\n`;
             analysisResults.issues.forEach(issue => {
                 promptText += `- ${issue}\n`;
-            });
-            promptText += '\n';
-        }
-        
-        // Add recommendations
-        if (analysisResults.recommendations.length > 0) {
-            promptText += `=== RECOMMENDATIONS ===\n`;
-            analysisResults.recommendations.forEach(rec => {
-                promptText += `- ${rec}\n`;
             });
             promptText += '\n';
         }
@@ -556,14 +404,15 @@ class EnhancedAIAnalyzer {
             promptText += '\n';
         });
         
+        promptText += `=== PERMINTAAN ===\n`;
+        promptText += `${cleanRequest}\n\n`;
+        
         promptText += `=== INSTRUKSI UNTUK AI ===\n`;
         promptText += `1. Berikan kode lengkap yang sudah diupdate untuk setiap file yang perlu diubah.\n`;
         promptText += `2. Pastikan kode sudah dioptimalkan, robust, dan mengikuti best practices.\n`;
         promptText += `3. Tambahkan error handling yang proper.\n`;
         promptText += `4. Gunakan sintaks modern (ES6+ untuk JavaScript).\n`;
-        promptText += `5. Fix semua issues yang ditemukan dalam analysis.\n`;
-        promptText += `6. Implementasikan semua recommendations yang relevan.\n`;
-        promptText += `7. Tambahkan komentar untuk bagian yang kompleks.\n\n`;
+        promptText += `5. Tambahkan komentar untuk bagian yang kompleks.\n\n`;
         
         promptText += `Format response:\n`;
         promptText += `=== FILENAME.EXT ===\n`;
@@ -572,25 +421,18 @@ class EnhancedAIAnalyzer {
         return promptText;
     }
 
-    /**
-     * Perform comprehensive code analysis
-     */
-    performComprehensiveAnalysis(context) {
+    performQuickAnalysis(context) {
         const analysis = {
             totalFiles: Object.keys(context.fileContents).length,
             totalLines: 0,
             fileTypes: new Set(),
             issues: [],
             recommendations: [],
-            security: [],
-            performance: [],
             codeQuality: {
                 hasOldSyntax: false,
                 hasDebugCode: false,
                 hasLongFiles: false,
-                lackErrorHandling: false,
-                hasSecurityIssues: false,
-                hasPerformanceIssues: false
+                lackErrorHandling: false
             }
         };
 
@@ -602,390 +444,157 @@ class EnhancedAIAnalyzer {
             const ext = filename.split('.').pop().toLowerCase();
             analysis.fileTypes.add(ext);
             
-            // Language-specific analysis
-            this.analyzeByLanguage(filename, content, analysis);
+            // JavaScript/TypeScript specific checks
+            if (['js', 'ts', 'jsx', 'tsx'].includes(ext)) {
+                if (/\bvar\s+\w+/.test(content)) {
+                    analysis.issues.push(`${filename}: Menggunakan 'var' instead of 'let/const'`);
+                    analysis.codeQuality.hasOldSyntax = true;
+                }
+                
+                if (!/try\s*{/.test(content) && lineCount > 50) {
+                    analysis.issues.push(`${filename}: Tidak ada error handling (try-catch)`);
+                    analysis.codeQuality.lackErrorHandling = true;
+                }
+                
+                if (/function\s*\(/.test(content) && !(/=>\s*{/.test(content))) {
+                    analysis.recommendations.push(`${filename}: Pertimbangkan menggunakan arrow functions`);
+                }
+            }
             
-            // General code quality checks
-            this.performGeneralChecks(filename, content, lineCount, analysis);
+            // General checks
+            if (/console\.(log|debug|info)/.test(content)) {
+                analysis.issues.push(`${filename}: Mengandung console statements`);
+                analysis.codeQuality.hasDebugCode = true;
+            }
+            
+            if (/TODO|FIXME|HACK|XXX/.test(content)) {
+                analysis.issues.push(`${filename}: Mengandung TODO/FIXME comments`);
+            }
+            
+            if (lineCount > 500) {
+                analysis.issues.push(`${filename}: File terlalu besar (${lineCount} lines)`);
+                analysis.codeQuality.hasLongFiles = true;
+            }
+            
+            // Check for potential security issues
+            if (/innerHTML\s*=/.test(content)) {
+                analysis.issues.push(`${filename}: Menggunakan innerHTML (potential XSS risk)`);
+            }
+            
+            if (/eval\s*\(/.test(content)) {
+                analysis.issues.push(`${filename}: Menggunakan eval() (security risk)`);
+            }
         });
 
-        // Generate recommendations based on findings
-        this.generateSmartRecommendations(analysis);
+        // Add general recommendations based on analysis
+        if (analysis.codeQuality.hasOldSyntax) {
+            analysis.recommendations.push('Upgrade ke ES6+ syntax untuk better performance');
+        }
+        
+        if (analysis.codeQuality.lackErrorHandling) {
+            analysis.recommendations.push('Tambahkan proper error handling untuk robustness');
+        }
 
         return analysis;
     }
 
-    /**
-     * Analyze code by programming language
-     */
-    analyzeByLanguage(filename, content, analysis) {
-        const ext = filename.split('.').pop().toLowerCase();
-        
-        switch (ext) {
-            case 'js':
-            case 'ts':
-            case 'jsx':
-            case 'tsx':
-                this.analyzeJavaScriptTypeScript(filename, content, analysis);
-                break;
-            case 'html':
-                this.analyzeHTML(filename, content, analysis);
-                break;
-            case 'css':
-                this.analyzeCSS(filename, content, analysis);
-                break;
-            case 'py':
-                this.analyzePython(filename, content, analysis);
-                break;
-            default:
-                this.analyzeGeneric(filename, content, analysis);
-        }
-    }
-
-    /**
-     * Analyze JavaScript/TypeScript files
-     */
-    analyzeJavaScriptTypeScript(filename, content, analysis) {
-        // Check for old syntax
-        if (/\bvar\s+\w+/.test(content)) {
-            analysis.issues.push(`${filename}: Using 'var' instead of 'let/const'`);
-            analysis.codeQuality.hasOldSyntax = true;
-        }
-
-        // Check for error handling
-        if (!/try\s*{|catch\s*\(|\.catch\(/.test(content) && content.length > 1000) {
-            analysis.issues.push(`${filename}: Missing error handling`);
-            analysis.codeQuality.lackErrorHandling = true;
-        }
-
-        // Check for modern features
-        if (!/(?:const|let)\s+\w+\s*=\s*\(.*\)\s*=>/.test(content) && /function\s+\w+\s*\(/.test(content)) {
-            analysis.recommendations.push(`${filename}: Consider using arrow functions`);
-        }
-
-        // Performance checks
-        if (/document\.getElementById/.test(content) && content.match(/document\.getElementById/g).length > 5) {
-            analysis.performance.push(`${filename}: Multiple DOM queries - consider caching elements`);
-            analysis.codeQuality.hasPerformanceIssues = true;
-        }
-
-        // Security checks
-        if (/innerHTML\s*=/.test(content)) {
-            analysis.security.push(`${filename}: innerHTML usage - potential XSS risk`);
-            analysis.codeQuality.hasSecurityIssues = true;
-        }
-
-        if (/eval\s*\(/.test(content)) {
-            analysis.security.push(`${filename}: eval() usage - security risk`);
-            analysis.codeQuality.hasSecurityIssues = true;
-        }
-    }
-
-    /**
-     * Analyze HTML files
-     */
-    analyzeHTML(filename, content, analysis) {
-        if (!content.includes('<!DOCTYPE html>')) {
-            analysis.issues.push(`${filename}: Missing DOCTYPE declaration`);
-        }
-
-        if (!content.includes('<meta charset=')) {
-            analysis.issues.push(`${filename}: Missing charset meta tag`);
-        }
-
-        if (!content.includes('viewport')) {
-            analysis.recommendations.push(`${filename}: Add viewport meta tag for responsive design`);
-        }
-    }
-
-    /**
-     * Analyze CSS files
-     */
-    analyzeCSS(filename, content, analysis) {
-        const rules = content.match(/[^{}]+\{[^{}]*\}/g) || [];
-        
-        if (rules.length > 200) {
-            analysis.performance.push(`${filename}: Large CSS file - consider splitting or using CSS modules`);
-        }
-
-        if (!content.includes('@media')) {
-            analysis.recommendations.push(`${filename}: No media queries found - consider responsive design`);
-        }
-    }
-
-    /**
-     * Analyze Python files
-     */
-    analyzePython(filename, content, analysis) {
-        if (!/try:\s*$[\s\S]*?except[\s\S]*?:/m.test(content) && content.length > 1000) {
-            analysis.issues.push(`${filename}: Missing exception handling`);
-        }
-
-        if (!/^if __name__ == ['"']__main__['"]:/m.test(content) && content.includes('def ')) {
-            analysis.recommendations.push(`${filename}: Add main guard for better module structure`);
-        }
-    }
-
-    /**
-     * Generic file analysis
-     */
-    analyzeGeneric(filename, content, analysis) {
-        // Basic checks for any file type
-        const longLines = content.split('\n').filter(line => line.length > 120);
-        if (longLines.length > content.split('\n').length * 0.1) {
-            analysis.issues.push(`${filename}: Many long lines (>120 characters)`);
-        }
-    }
-
-    /**
-     * Perform general code quality checks
-     */
-    performGeneralChecks(filename, content, lineCount, analysis) {
-        // Debug code detection
-        if (/console\.(log|debug|info|warn|error)|print\(|println!|fmt\.Print/.test(content)) {
-            analysis.issues.push(`${filename}: Debug statements found`);
-            analysis.codeQuality.hasDebugCode = true;
-        }
-
-        // TODO/FIXME comments
-        if (/TODO|FIXME|HACK|XXX|BUG/.test(content)) {
-            analysis.issues.push(`${filename}: Contains TODO/FIXME comments`);
-        }
-
-        // File size check
-        if (lineCount > 500) {
-            analysis.issues.push(`${filename}: Large file (${lineCount} lines) - consider refactoring`);
-            analysis.codeQuality.hasLongFiles = true;
-        }
-
-        // Potential credential exposure
-        if (/(?:password|secret|key|token)\s*[:=]\s*['"][^'"]{8,}['"]|api[_-]?key\s*[:=]/i.test(content)) {
-            analysis.security.push(`${filename}: Potential hardcoded credentials`);
-        }
-    }
-
-    /**
-     * Generate smart recommendations based on analysis
-     */
-    generateSmartRecommendations(analysis) {
-        if (analysis.codeQuality.hasOldSyntax) {
-            analysis.recommendations.push('Modernize JavaScript syntax (ES6+) for better performance and readability');
-        }
-
-        if (analysis.codeQuality.lackErrorHandling) {
-            analysis.recommendations.push('Add comprehensive error handling for better robustness');
-        }
-
-        if (analysis.codeQuality.hasLongFiles) {
-            analysis.recommendations.push('Split large files into smaller, more maintainable modules');
-        }
-
-        if (analysis.codeQuality.hasSecurityIssues) {
-            analysis.recommendations.push('Address security vulnerabilities (XSS, code injection risks)');
-        }
-
-        if (analysis.codeQuality.hasPerformanceIssues) {
-            analysis.recommendations.push('Optimize performance bottlenecks (DOM access, large loops)');
-        }
-
-        if (analysis.totalFiles > 1 && !analysis.fileTypes.has('json')) {
-            analysis.recommendations.push('Consider adding package.json for better dependency management');
-        }
-
-        // Consolidate issues into recommendations and security findings
-        analysis.issues.forEach(issue => {
-            if (issue.includes('security') || issue.includes('XSS') || issue.includes('eval')) {
-                analysis.security.push(issue);
-            }
+    displayAIPrompt(aiPrompt) {
+        // Display analysis summary in results container
+        const summaryHtml = this.createAnalysisSummary(aiPrompt.analysisResults);
+        this.displayAnalysisResult({
+            title: '📊 Quick Analysis Summary',
+            content: summaryHtml,
+            timestamp: aiPrompt.timestamp,
+            isHtml: true
         });
+        
+        // Display AI prompt in prompt content
+        this.elements.aiPromptContent.textContent = aiPrompt.aiPromptText;
     }
 
-    /**
-     * Calculate overall code quality score
-     */
-    calculateQualityScore(analysis) {
-        let score = 100;
-        
-        // Deduct points for various issues
-        score -= Math.min(analysis.issues.length * 5, 30);
-        score -= Math.min(analysis.security.length * 10, 40);
-        score -= Math.min(analysis.performance.length * 8, 30);
-        
-        // Bonus points for good practices
-        if (analysis.fileTypes.has('json')) score += 5; // Has package.json
-        if (analysis.totalFiles < 10 && analysis.totalLines < 2000) score += 10; // Reasonable size
-        
-        return Math.max(score, 0);
+    createAnalysisSummary(analysis) {
+        return `
+Total Files: ${analysis.totalFiles}
+Total Lines: ${analysis.totalLines}
+File Types: ${Array.from(analysis.fileTypes).join(', ')}
+
+Issues Found: ${analysis.issues.length}
+${analysis.issues.slice(0, 5).map(i => `• ${i}`).join('\n')}
+${analysis.issues.length > 5 ? `... and ${analysis.issues.length - 5} more issues` : ''}
+
+Recommendations: ${analysis.recommendations.length}
+${analysis.recommendations.slice(0, 3).map(r => `• ${r}`).join('\n')}`;
     }
 
-    /**
-     * Delay utility for UX
-     */
-    delay(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    /**
-     * Display combined results in the AI prompt section
-     */
-    displayCombinedResult(result) {
-        // Create formatted display content
-        const displayContent = this.createDisplayContent(result);
-        this.elements.aiPromptContent.textContent = displayContent;
-    }
-
-    /**
-     * Create formatted display content
-     */
-    createDisplayContent(result) {
-        const analysis = result.analysisResults;
-        let displayText = `=== QUICK ANALYSIS SUMMARY ===\n`;
-        displayText += `📊 Files: ${analysis.totalFiles} | Lines: ${analysis.totalLines} | Quality: ${this.calculateQualityScore(analysis)}/100\n`;
-        displayText += `📁 Types: ${Array.from(analysis.fileTypes).join(', ')}\n\n`;
-        
-        if (analysis.issues.length > 0) {
-            displayText += `⚠️ Issues Found (${analysis.issues.length}):\n`;
-            analysis.issues.slice(0, 5).forEach(issue => {
-                displayText += `• ${issue}\n`;
-            });
-            if (analysis.issues.length > 5) {
-                displayText += `... and ${analysis.issues.length - 5} more\n`;
-            }
-            displayText += '\n';
-        }
-
-        if (analysis.security.length > 0) {
-            displayText += `🔒 Security Concerns (${analysis.security.length}):\n`;
-            analysis.security.forEach(sec => {
-                displayText += `• ${sec}\n`;
-            });
-            displayText += '\n';
-        }
-
-        if (analysis.recommendations.length > 0) {
-            displayText += `💡 Recommendations (${analysis.recommendations.length}):\n`;
-            analysis.recommendations.slice(0, 5).forEach(rec => {
-                displayText += `• ${rec}\n`;
-            });
-            displayText += '\n';
-        }
-
-        displayText += `${'='.repeat(60)}\n`;
-        displayText += `FULL AI PROMPT (Copy semua untuk AI):\n`;
-        displayText += `${'='.repeat(60)}\n\n`;
-        displayText += result.combinedPromptText;
-        
-        return displayText;
-    }
-
-    /**
-     * Copy AI prompt to clipboard
-     */
     async copyAIPrompt() {
         if (!this.currentAIPrompt) {
-            this.showMessage('Generate prompt terlebih dahulu!', 'error');
+            this.showMessage('Tidak ada AI prompt untuk dicopy!', 'error');
             return;
         }
 
         try {
-            await navigator.clipboard.writeText(this.currentAIPrompt.combinedPromptText);
+            await navigator.clipboard.writeText(this.currentAIPrompt.aiPromptText);
             const btn = this.elements.copyPromptBtn;
             const originalText = btn.textContent;
             btn.textContent = '✅ Copied! Paste ke AI sekarang';
-            btn.style.background = '#27ae60';
-            
             setTimeout(() => {
                 btn.textContent = originalText;
-                btn.style.background = '#17a2b8';
             }, 3000);
-            
         } catch (err) {
             console.error('Copy failed:', err);
-            // Fallback: select text for manual copy
-            this.elements.aiPromptContent.select();
-            this.showMessage('Please copy the text manually (Ctrl+C)', 'error');
+            this.showMessage('Gagal copy ke clipboard. Silakan select dan copy manual.', 'error');
         }
     }
 
-    /**
-     * Download comprehensive AI-ready report
-     */
     downloadAIReadyReport() {
         if (!this.currentAIPrompt) {
-            this.showMessage('Generate prompt terlebih dahulu!', 'error');
+            this.showMessage('Generate AI prompt terlebih dahulu!', 'error');
             return;
         }
 
-        try {
-            const reportContent = this.generateComprehensiveReport();
-            const blob = new Blob([reportContent], { type: 'text/plain;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            
-            const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-            a.href = url;
-            a.download = `ai-ready-prompt-${timestamp}.txt`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            this.showMessage('Report berhasil didownload!', 'success');
-            
-        } catch (error) {
-            console.error('Download error:', error);
-            this.showMessage('Error downloading report: ' + error.message, 'error');
-        }
+        const reportContent = this.generateAIReadyReportContent();
+        const blob = new Blob([reportContent], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+        a.href = url;
+        a.download = `ai-ready-prompt-${timestamp}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        this.showMessage('Report berhasil didownload!', 'success');
     }
 
-    /**
-     * Generate comprehensive report content
-     */
-    generateComprehensiveReport() {
-        const analysis = this.currentAIPrompt.analysisResults;
+    generateAIReadyReportContent() {
         const report = [
-            '='.repeat(60),
+            '=' .repeat(60),
             'AI-READY PROJECT ANALYSIS REPORT',
-            '='.repeat(60),
+            '=' .repeat(60),
             `Generated: ${new Date().toLocaleString('id-ID')}`,
             `Total Files: ${this.uploadedFiles.size}`,
-            `Quality Score: ${this.calculateQualityScore(analysis)}/100`,
             '',
-            '='.repeat(60),
-            'ANALYSIS SUMMARY',
-            '='.repeat(60),
-            `Files: ${analysis.totalFiles}`,
-            `Lines: ${analysis.totalLines}`,
-            `Types: ${Array.from(analysis.fileTypes).join(', ')}`,
-            `Issues: ${analysis.issues.length}`,
-            `Security: ${analysis.security.length}`,
-            `Recommendations: ${analysis.recommendations.length}`,
-            '',
-            '='.repeat(60),
+            '=' .repeat(60),
             'PROMPT FOR AI',
-            '='.repeat(60),
+            '=' .repeat(60),
             '',
-            this.currentAIPrompt.combinedPromptText,
+            this.currentAIPrompt.aiPromptText,
             '',
-            '='.repeat(60),
+            '=' .repeat(60),
             'END OF REPORT',
-            '='.repeat(60)
+            '=' .repeat(60)
         ].join('\n');
         
         return report;
     }
 
-    /**
-     * Extract mentioned files from prompt
-     */
     extractMentionedFiles(prompt) {
         const mentions = prompt.match(/@(\S+)/g) || [];
         return mentions.map(mention => mention.substring(1));
     }
 
-    /**
-     * Build project context for analysis
-     */
     buildProjectContext(mentionedFiles) {
         const context = {
             allFiles: Array.from(this.uploadedFiles.keys()),
@@ -1009,9 +618,6 @@ class EnhancedAIAnalyzer {
         return context;
     }
 
-    /**
-     * Get project structure
-     */
     getProjectStructure() {
         const structure = {};
         
@@ -1043,13 +649,11 @@ class EnhancedAIAnalyzer {
         return structure;
     }
 
-    /**
-     * Generate tree structure display
-     */
     generateStructureTree(structure, indent = 0) {
         let tree = '';
         const prefix = '  '.repeat(indent);
         const entries = Object.entries(structure).sort((a, b) => {
+            // Folders first, then files
             if (a[1].type === 'folder' && b[1].type === 'file') return -1;
             if (a[1].type === 'file' && b[1].type === 'folder') return 1;
             return a[0].localeCompare(b[0]);
@@ -1066,14 +670,61 @@ class EnhancedAIAnalyzer {
         
         return tree;
     }
+
+    displayAnalysisResult(analysis) {
+        const template = document.getElementById('resultTemplate');
+        const clone = template.content.cloneNode(true);
+        const resultElement = clone.querySelector('.analysis-result');
+        
+        resultElement.querySelector('.result-title').textContent = analysis.title;
+        resultElement.querySelector('.result-time').textContent = analysis.timestamp;
+        
+        const contentElement = resultElement.querySelector('.result-content');
+        if (analysis.isHtml) {
+            contentElement.textContent = analysis.content; // Use textContent instead of innerHTML for security
+        } else {
+            contentElement.textContent = analysis.content;
+        }
+        
+        // Add event listeners to buttons
+        const copyBtn = resultElement.querySelector('.copy-btn');
+        const clearBtn = resultElement.querySelector('.clear-btn');
+        
+        copyBtn.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(analysis.content);
+                copyBtn.textContent = '✅ Copied!';
+                setTimeout(() => {
+                    copyBtn.textContent = '📋 Copy';
+                }, 2000);
+            } catch (err) {
+                console.error('Copy failed:', err);
+            }
+        });
+        
+        clearBtn.addEventListener('click', () => {
+            resultElement.remove();
+            if (this.elements.resultsContainer.children.length === 0) {
+                this.elements.resultsContainer.innerHTML = '<div class="placeholder">🚀 Upload project dan klik "GENERATE" untuk mulai</div>';
+            }
+        });
+        
+        // Remove placeholder if exists
+        const placeholder = this.elements.resultsContainer.querySelector('.placeholder');
+        if (placeholder) {
+            placeholder.remove();
+        }
+        
+        // Remove old messages
+        const messages = this.elements.resultsContainer.querySelectorAll('.message');
+        messages.forEach(m => m.remove());
+        
+        this.elements.resultsContainer.insertBefore(clone, this.elements.resultsContainer.firstChild);
+        this.elements.resultsContainer.scrollTop = 0;
+    }
 }
 
-// Initialize the application when DOM is ready
+// Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    try {
-        new EnhancedAIAnalyzer();
-        console.log('Enhanced AI Analyzer initialized successfully');
-    } catch (error) {
-        console.error('Failed to initialize analyzer:', error);
-    }
+    new EnhancedAIAnalyzer();
 });
