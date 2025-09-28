@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced AI Project Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            color: #2c3e50;
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .upload-area {
+            border: 3px dashed #3498db;
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            background: #ecf0f1;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover {
+            border-color: #2980b9;
+            background: #d6dbdf;
+        }
+
+        .upload-area.drag-over {
+            border-color: #27ae60;
+            background: #d5f4e6;
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .upload-area h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .browse-link {
+            color: #3498db;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .supported-formats {
+            margin-top: 15px;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        .uploaded-files {
+            margin-top: 20px;
+        }
+
+        .uploaded-files h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .files-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #bdc3c7;
+            border-radius: 8px;
+            padding: 10px;
+            background: white;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            background: #ecf0f1;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            transition: background 0.2s;
+        }
+
+        .file-item:hover {
+            background: #d6dbdf;
+        }
+
+        .file-icon {
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        .file-name {
+            flex: 1;
+            color: #2c3e50;
+            font-weight: 500;
+            font-size: 0.9em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-size {
+            color: #7f8c8d;
+            font-size: 0.8em;
+            margin-right: 10px;
+        }
+
+        .mention-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 0.8em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .mention-btn:hover {
+            background: #2980b9;
+        }
+
+        /* Analysis Section */
+        .analysis-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        #analysisPrompt {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            font-size: 1em;
+            resize: vertical;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        #analysisPrompt:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .file-mention-tools {
+            margin-bottom: 20px;
+        }
+
+        .file-mention-tools label {
+            display: block;
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .file-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .file-mention-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 6px 12px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
+
+        .file-mention-btn:hover {
+            background: #c0392b;
+            transform: scale(1.05);
+        }
+
+        .analyze-btn, .generate-btn {
+            width: 100%;
+            padding: 15px;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .analyze-btn {
+            background: #27ae60;
+        }
+
+        .analyze-btn:hover:not(:disabled) {
+            background: #219653;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+        }
+
+        .generate-btn {
+            background: #f39c12;
+        }
+
+        .generate-btn:hover:not(:disabled) {
+            background: #e67e22;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.3);
+        }
+
+        .analyze-btn:disabled, .generate-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            opacity: 0.7;
+        }
+
+        .download-btn {
+            width: 100%;
+            padding: 15px;
+            background: #9b59b6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .download-btn:hover:not(:disabled) {
+            background: #8e44ad;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(155, 89, 182, 0.3);
+        }
+
+        .download-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            opacity: 0.7;
+        }
+
+        /* AI Prompt Section */
+        .ai-prompt-section {
+            background: #fff3cd;
+            border: 2px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .ai-prompt-section h3 {
+            color: #856404;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ai-prompt-content {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .prompt-placeholder {
+            color: #7f8c8d;
+            font-style: italic;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        /* Results Section */
+        .results-section {
+            margin-top: 30px;
+        }
+
+        .results-section h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .results-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #bdc3c7;
+            border-radius: 8px;
+            padding: 15px;
+            background: white;
+        }
+
+        .placeholder {
+            text-align: center;
+            color: #7f8c8d;
+            padding: 40px 20px;
+        }
+
+        .analysis-result {
+            border: 1px solid #3498db;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #ecf0f1;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #bdc3c7;
+        }
+
+        .result-title {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .result-time {
+            color: #7f8c8d;
+            font-size: 0.8em;
+        }
+
+        .result-content {
+            color: #2c3e50;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.4;
+            margin-bottom: 10px;
+            word-wrap: break-word;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .copy-btn, .clear-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: all 0.2s;
+        }
+
+        .copy-btn {
+            background: #3498db;
+            color: white;
+        }
+
+        .copy-btn:hover {
+            background: #2980b9;
+            transform: scale(1.05);
+        }
+
+        .clear-btn {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .clear-btn:hover {
+            background: #c0392b;
+            transform: scale(1.05);
+        }
+
+        .copy-prompt-btn {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s;
+        }
+
+        .copy-prompt-btn:hover {
+            background: #138496;
+            transform: scale(1.02);
+        }
+
+        /* Loading indicator */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            .file-mention-btn {
+                max-width: 150px;
+            }
+        }
+
+        /* Scrollbar Styling */
+        .files-list::-webkit-scrollbar,
+        .results-container::-webkit-scrollbar,
+        .ai-prompt-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .files-list::-webkit-scrollbar-track,
+        .results-container::-webkit-scrollbar-track,
+        .ai-prompt-content::-webkit-scrollbar-track {
+            background: #ecf0f1;
+            border-radius: 3px;
+        }
+
+        .files-list::-webkit-scrollbar-thumb,
+        .results-container::-webkit-scrollbar-thumb,
+        .ai-prompt-content::-webkit-scrollbar-thumb {
+            background: #3498db;
+            border-radius: 3px;
+        }
+
+        .files-list::-webkit-scrollbar-thumb:hover,
+        .results-container::-webkit-scrollbar-thumb:hover,
+        .ai-prompt-content::-webkit-scrollbar-thumb:hover {
+            background: #2980b9;
+        }
+
+        /* Error and success messages */
+        .message {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .message.error {
+            background: #fee;
+            color: #c00;
+            border: 1px solid #fcc;
+        }
+
+        .message.success {
+            background: #efe;
+            color: #060;
+            border: 1px solid #cfc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧠 Enhanced AI Project Analyzer</h1>
+            <p>Upload project, generate AI-ready prompts, dan dapatkan kode yang sudah diupgrade</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Upload Section -->
+            <section class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <h3>Drop project files here</h3>
+                    <p>atau <span class="browse-link">browse files</span></p>
+                    <input type="file" id="fileInput" multiple webkitdirectory directory>
+                    <div class="supported-formats">
+                        📄 Supported: .js, .html, .css, .md, .txt, .json, .py, .tsx, .ts, .jsx, .vue, .php, .java, .cpp, .c, .go, .rs, .rb, .swift
+                    </div>
+                </div>
+                
+                <div class="uploaded-files" id="uploadedFiles" style="display: none;">
+                    <h4>📋 Files Terupload:</h4>
+                    <div class="files-list" id="filesList"></div>
+                </div>
+            </section>
+
+            <!-- Analysis Section -->
+            <section class="analysis-section">
+                <div class="analysis-controls">
+                    <div class="input-group">
+                        <label for="analysisPrompt">🎯 Permintaan Upgrade/Perbaikan:</label>
+                        <textarea 
+                            id="analysisPrompt" 
+                            placeholder="Contoh: Tambahkan fitur autosave, perbaiki bug di fungsi login, upgrade ke modern ES6 syntax, tambahkan error handling..."
+                            rows="4"
+                        ></textarea>
+                    </div>
+
+                    <div class="file-mention-tools">
+                        <label>📍 Mention Files:</label>
+                        <div class="file-buttons" id="fileButtons"></div>
+                    </div>
+
+                    <button id="generateBtn" class="generate-btn">
+                        🚀 Generate AI Prompt
+                    </button>
+
+                    <button id="analyzeBtn" class="analyze-btn">
+                        📊 Analisa Project (Old Method)
+                    </button>
+
+                    <button id="downloadBtn" class="download-btn" disabled>
+                        💾 Download AI-Ready Report
+                    </button>
+                </div>
+
+                <div class="results-section">
+                    <h4>📊 Hasil Analisa:</h4>
+                    <div class="results-container" id="resultsContainer">
+                        <div class="placeholder">
+                            🚀 Upload project dan klik "Generate AI Prompt" untuk mulai
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- AI Prompt Section -->
+        <section class="ai-prompt-section" id="aiPromptSection" style="display: none;">
+            <h3>🤖 AI-Ready Prompt (Copy & Paste ke AI)</h3>
+            <div class="ai-prompt-content" id="aiPromptContent">
+                <div class="prompt-placeholder">
+                    Generate AI Prompt akan muncul di sini...
+                </div>
+            </div>
+            <button class="copy-prompt-btn" id="copyPromptBtn">
+                📋 Copy Full Prompt untuk AI
+            </button>
+        </section>
+
+        <!-- Templates -->
+        <template id="fileItemTemplate">
+            <div class="file-item">
+                <span class="file-icon">📄</span>
+                <span class="file-name"></span>
+                <span class="file-size"></span>
+                <button class="mention-btn" title="Mention file ini">@</button>
+            </div>
+        </template>
+
+        <template id="resultTemplate">
+            <div class="analysis-result">
+                <div class="result-header">
+                    <span class="result-title"></span>
+                    <span class="result-time"></span>
+                </div>
+                <div class="result-content"></div>
+                <div class="result-actions">
+                    <button class="copy-btn">📋 Copy</button>
+                    <button class="clear-btn">🗑️ Hapus</button>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <script>
+        'use strict';
+
+        class EnhancedAIAnalyzer {
+            constructor() {
+                this.uploadedFiles = new Map();
+                this.analysisHistory = [];
+                this.currentAnalysis = null;
+                this.currentAIPrompt = null;
+                this.supportedExtensions = new Set([
+                    'js', 'html', 'css', 'md', 'txt', 'json', 'py', 'tsx', 
+                    'ts', 'jsx', 'vue', 'php', 'java', 'cpp', 'c', 'go', 
+                    'rs', 'rb', 'swift', 'yml', 'yaml', 'xml', 'sh', 'bat'
+                ]);
+                this.initializeEventListeners();
+                this.setupKeyboardShortcuts();
+            }
+
+            initializeEventListeners() {
+                // Cache DOM elements
+                this.elements = {
+                    fileInput: document.getElementById('fileInput'),
+                    uploadArea: document.getElementById('uploadArea'),
+                    analyzeBtn: document.getElementById('analyzeBtn'),
+                    generateBtn: document.getElementById('generateBtn'),
+                    downloadBtn: document.getElementById('downloadBtn'),
+                    copyPromptBtn: document.getElementById('copyPromptBtn'),
+                    analysisPrompt: document.getElementById('analysisPrompt'),
+                    filesList: document.getElementById('filesList'),
+                    fileButtons: document.getElementById('fileButtons'),
+                    resultsContainer: document.getElementById('resultsContainer'),
+                    uploadedFiles: document.getElementById('uploadedFiles'),
+                    aiPromptSection: document.getElementById('aiPromptSection'),
+                    aiPromptContent: document.getElementById('aiPromptContent')
+                };
+
+                // Drag and drop functionality with throttling
+                let dragCounter = 0;
+                this.elements.uploadArea.addEventListener('click', () => this.elements.fileInput.click());
+                
+                this.elements.uploadArea.addEventListener('dragenter', (e) => {
+                    e.preventDefault();
+                    dragCounter++;
+                    if (dragCounter === 1) {
+                        this.elements.uploadArea.classList.add('drag-over');
+                    }
+                });
+
+                this.elements.uploadArea.addEventListener('dragleave', (e) => {
+                    e.preventDefault();
+                    dragCounter--;
+                    if (dragCounter === 0) {
+                        this.elements.uploadArea.classList.remove('drag-over');
+                    }
+                });
+
+                this.elements.uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                });
+
+                this.elements.uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dragCounter = 0;
+                    this.elements.uploadArea.classList.remove('drag-over');
+                    this.handleDrop(e);
+                });
+
+                // File input change
+                this.elements.fileInput.addEventListener('change', this.handleFileSelect.bind(this));
+
+                // Buttons with debouncing
+                this.elements.analyzeBtn.addEventListener('click', this.debounce(this.analyzeProject.bind(this), 300));
+                this.elements.generateBtn.addEventListener('click', this.debounce(this.generateAIPrompt.bind(this), 300));
+                this.elements.downloadBtn.addEventListener('click', this.debounce(this.downloadAIReadyReport.bind(this), 300));
+                this.elements.copyPromptBtn.addEventListener('click', this.copyAIPrompt.bind(this));
+
+                // Auto-save prompt to localStorage
+                this.elements.analysisPrompt.addEventListener('input', this.debounce(() => {
+                    localStorage.setItem('lastPrompt', this.elements.analysisPrompt.value);
+                }, 500));
+
+                // Restore last prompt
+                const lastPrompt = localStorage.getItem('lastPrompt');
+                if (lastPrompt) {
+                    this.elements.analysisPrompt.value = lastPrompt;
+                }
+            }
+
+            setupKeyboardShortcuts() {
+                document.addEventListener('keydown', (e) => {
+                    // Ctrl/Cmd + Enter to generate AI prompt
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                        e.preventDefault();
+                        this.elements.generateBtn.click();
+                    }
+                    // Ctrl/Cmd + S to download
+                    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                        e.preventDefault();
+                        if (!this.elements.downloadBtn.disabled) {
+                            this.elements.downloadBtn.click();
+                        }
+                    }
+                });
+            }
+
+            debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+
+            async handleDrop(e) {
+                const items = e.dataTransfer.items;
+                const files = [];
+                
+                for (let i = 0; i < items.length; i++) {
+                    const item = items[i];
+                    if (item.kind === 'file') {
+                        const entry = item.webkitGetAsEntry();
+                        if (entry) {
+                            await this.traverseFileTree(entry, files);
+                        }
+                    }
+                }
+                
+                this.processFiles(files);
+            }
+
+            async traverseFileTree(item, files, path = "") {
+                return new Promise((resolve) => {
+                    if (item.isFile) {
+                        item.file((file) => {
+                            file.fullPath = path + file.name;
+                            files.push(file);
+                            resolve();
+                        });
+                    } else if (item.isDirectory) {
+                        const dirReader = item.createReader();
+                        dirReader.readEntries(async (entries) => {
+                            for (let entry of entries) {
+                                await this.traverseFileTree(entry, files, path + item.name + "/");
+                            }
+                            resolve();
+                        });
+                    }
+                });
+            }
+
+            handleFileSelect(e) {
+                const files = Array.from(e.target.files);
+                this.processFiles(files);
+            }
+
+            async processFiles(files) {
+                const textFiles = files.filter(file => this.isValidFile(file));
+                const totalSize = textFiles.reduce((sum, file) => sum + file.size, 0);
+                
+                // Check total size limit (10MB)
+                if (totalSize > 10 * 1024 * 1024) {
+                    this.showMessage('Total ukuran file melebihi 10MB. Silakan pilih file yang lebih kecil.', 'error');
+                    return;
+                }
+
+                const promises = textFiles.map(async (file) => {
+                    try {
+                        const content = await this.readFileContent(file);
+                        const filePath = file.fullPath || file.webkitRelativePath || file.name;
+                        
+                        return {
+                            name: file.name,
+                            content: content,
+                            size: file.size,
+                            type: file.type || this.getMimeType(file.name),
+                            path: filePath
+                        };
+                    } catch (error) {
+                        console.error(`Error reading file ${file.name}:`, error);
+                        return null;
+                    }
+                });
+
+                const results = await Promise.all(promises);
+                const validResults = results.filter(r => r !== null);
+
+                // Clear existing files and add new ones
+                this.uploadedFiles.clear();
+                validResults.forEach(fileData => {
+                    this.uploadedFiles.set(fileData.name, fileData);
+                });
+
+                this.updateFileList();
+                this.updateFileButtons();
+                
+                if (validResults.length > 0) {
+                    this.showMessage(`${validResults.length} file berhasil diupload`, 'success');
+                }
+            }
+
+            isValidFile(file) {
+                const extension = file.name.split('.').pop().toLowerCase();
+                return this.supportedExtensions.has(extension) || 
+                       file.type.startsWith('text/') ||
+                       file.size < 1024 * 1024; // Allow small files regardless of extension
+            }
+
+            getMimeType(filename) {
+                const ext = filename.split('.').pop().toLowerCase();
+                const mimeTypes = {
+                    'js': 'text/javascript',
+                    'html': 'text/html',
+                    'css': 'text/css',
+                    'json': 'application/json',
+                    'md': 'text/markdown',
+                    'py': 'text/x-python',
+                    'java': 'text/x-java',
+                    'cpp': 'text/x-c++',
+                    'c': 'text/x-c',
+                    'php': 'text/x-php',
+                    'rb': 'text/x-ruby',
+                    'go': 'text/x-go',
+                    'rs': 'text/x-rust',
+                    'swift': 'text/x-swift'
+                };
+                return mimeTypes[ext] || 'text/plain';
+            }
+
+            readFileContent(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.onerror = (e) => reject(e);
+                    reader.readAsText(file);
+                });
+            }
+
+            updateFileList() {
+                const template = document.getElementById('fileItemTemplate');
+                this.elements.filesList.innerHTML = '';
+
+                const fragment = document.createDocumentFragment();
+                
+                this.uploadedFiles.forEach((file, filename) => {
+                    const clone = template.content.cloneNode(true);
+                    const fileItem = clone.querySelector('.file-item');
+                    
+                    clone.querySelector('.file-name').textContent = filename;
+                    clone.querySelector('.file-name').title = file.path || filename;
+                    clone.querySelector('.file-size').textContent = this.formatFileSize(file.size);
+                    
+                    const mentionBtn = clone.querySelector('.mention-btn');
+                    mentionBtn.addEventListener('click', () => this.mentionFile(filename));
+                    
+                    fragment.appendChild(clone);
+                });
+
+                this.elements.filesList.appendChild(fragment);
+                this.elements.uploadedFiles.style.display = this.uploadedFiles.size > 0 ? 'block' : 'none';
+            }
+
+            updateFileButtons() {
+                this.elements.fileButtons.innerHTML = '';
+                const fragment = document.createDocumentFragment();
+
+                this.uploadedFiles.forEach((file, filename) => {
+                    const button = document.createElement('button');
+                    button.className = 'file-mention-btn';
+                    button.textContent = filename;
+                    button.title = `Mention ${filename} dalam analisa`;
+                    button.addEventListener('click', () => this.mentionFile(filename));
+                    fragment.appendChild(button);
+                });
+
+                this.elements.fileButtons.appendChild(fragment);
+            }
+
+            mentionFile(filename) {
+                const currentText = this.elements.analysisPrompt.value;
+                const mentionText = `@${filename}`;
+                
+                if (!currentText.includes(mentionText)) {
+                    const newText = currentText ? `${currentText} ${mentionText}` : mentionText;
+                    this.elements.analysisPrompt.value = newText;
+                    this.elements.analysisPrompt.focus();
+                    
+                    // Trigger input event for auto-save
+                    const event = new Event('input', { bubbles: true });
+                    this.elements.analysisPrompt.dispatchEvent(event);
+                }
+            }
+
+            formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            showMessage(text, type = 'info') {
+                const message = document.createElement('div');
+                message.className = `message ${type}`;
+                message.textContent = text;
+                this.elements.resultsContainer.insertBefore(message, this.elements.resultsContainer.firstChild);
+                
+                setTimeout(() => {
+                    message.style.opacity = '0';
+                    setTimeout(() => message.remove(), 300);
+                }, 3000);
+            }
+
+            // Generate AI-ready prompt
+            async generateAIPrompt() {
+                const prompt = this.elements.analysisPrompt.value.trim();
+                
+                if (!prompt) {
+                    this.showMessage('Silakan masukkan permintaan upgrade/perbaikan terlebih dahulu!', 'error');
+                    return;
+                }
+
+                if (this.uploadedFiles.size === 0) {
+                    this.showMessage('Silakan upload file project terlebih dahulu!', 'error');
+                    return;
+                }
+
+                this.setButtonLoading(this.elements.generateBtn, true, '🚀 Generating AI Prompt...');
+
+                try {
+                    const aiPrompt = await this.createAIPrompt(prompt);
+                    this.currentAIPrompt = aiPrompt;
+                    this.displayAIPrompt(aiPrompt);
+                    
+                    // Enable download button
+                    this.elements.downloadBtn.disabled = false;
+                    
+                    // Show AI prompt section with animation
+                    this.elements.aiPromptSection.style.display = 'block';
+                    
+                    this.showMessage('AI Prompt berhasil dibuat!', 'success');
+                } catch (error) {
+                    console.error('AI Prompt generation error:', error);
+                    this.showMessage('Terjadi kesalahan saat membuat AI prompt: ' + error.message, 'error');
+                } finally {
+                    this.setButtonLoading(this.elements.generateBtn, false, '🚀 Generate AI Prompt');
+                }
+            }
+
+            setButtonLoading(button, loading, text) {
+                button.disabled = loading;
+                if (loading) {
+                    button.innerHTML = `<span class="loading-spinner"></span> ${text}`;
+                } else {
+                    button.textContent = text;
+                }
+            }
+
+            async createAIPrompt(userRequest) {
+                // Simulate processing with actual work
+                await this.delay(800);
+
+                const mentionedFiles = this.extractMentionedFiles(userRequest);
+                const projectContext = this.buildProjectContext(mentionedFiles);
+                const analysisResults = this.performQuickAnalysis(projectContext);
+                
+                return {
+                    userRequest: userRequest,
+                    projectStructure: this.getProjectStructure(),
+                    fileContents: projectContext.fileContents,
+                    analysisResults: analysisResults,
+                    aiPromptText: this.buildAIPromptText(userRequest, projectContext, analysisResults),
+                    timestamp: new Date().toLocaleString('id-ID')
+                };
+            }
+
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            buildAIPromptText(userRequest, projectContext, analysisResults) {
+                const cleanRequest = userRequest.replace(/@\S+/g, '').trim();
+                let promptText = `Saya memiliki project dengan struktur dan kode berikut. Tolong ${cleanRequest}\n\n`;
+                
+                // Add optimization notes if issues found
+                if (analysisResults.issues.length > 0) {
+                    promptText += `=== ISSUES YANG DITEMUKAN ===\n`;
+                    analysisResults.issues.forEach(issue => {
+                        promptText += `- ${issue}\n`;
+                    });
+                    promptText += '\n';
+                }
+                
+                promptText += `=== PROJECT STRUCTURE ===\n`;
+                promptText += this.generateStructureTree(this.getProjectStructure()) + '\n\n';
+                
+                promptText += `=== FILE CONTENTS ===\n`;
+                Object.entries(projectContext.fileContents).forEach(([filename, content]) => {
+                    promptText += `--- ${filename} ---\n`;
+                    const lines = content.split('\n');
+                    lines.forEach((line, index) => {
+                        promptText += `${String(index + 1).padStart(4)}: ${line}\n`;
+                    });
+                    promptText += '\n';
+                });
+                
+                promptText += `=== PERMINTAAN ===\n`;
+                promptText += `${cleanRequest}\n\n`;
+                
+                promptText += `=== INSTRUKSI UNTUK AI ===\n`;
+                promptText += `1. Berikan kode lengkap yang sudah diupdate untuk setiap file yang perlu diubah.\n`;
+                promptText += `2. Pastikan kode sudah dioptimalkan, robust, dan mengikuti best practices.\n`;
+                promptText += `3. Tambahkan error handling yang proper.\n`;
+                promptText += `4. Gunakan sintaks modern (ES6+ untuk JavaScript).\n`;
+                promptText += `5. Tambahkan komentar untuk bagian yang kompleks.\n\n`;
+                
+                promptText += `Format response:\n`;
+                promptText += `=== FILENAME.EXT ===\n`;
+                promptText += `[complete updated code here]\n\n`;
+                
+                return promptText;
+            }
+
+            performQuickAnalysis(context) {
+                const analysis = {
+                    totalFiles: Object.keys(context.fileContents).length,
+                    totalLines: 0,
+                    fileTypes: new Set(),
+                    issues: [],
+                    recommendations: [],
+                    codeQuality: {
+                        hasOldSyntax: false,
+                        hasDebugCode: false,
+                        hasLongFiles: false,
+                        lackErrorHandling: false
+                    }
+                };
+
+                Object.entries(context.fileContents).forEach(([filename, content]) => {
+                    const lines = content.split('\n');
+                    const lineCount = lines.length;
+                    analysis.totalLines += lineCount;
+                    
+                    const ext = filename.split('.').pop().toLowerCase();
+                    analysis.fileTypes.add(ext);
+                    
+                    // JavaScript/TypeScript specific checks
+                    if (['js', 'ts', 'jsx', 'tsx'].includes(ext)) {
+                        if (/\bvar\s+\w+/.test(content)) {
+                            analysis.issues.push(`${filename}: Menggunakan 'var' instead of 'let/const'`);
+                            analysis.codeQuality.hasOldSyntax = true;
+                        }
+                        
+                        if (!/try\s*{/.test(content) && lineCount > 50) {
+                            analysis.issues.push(`${filename}: Tidak ada error handling (try-catch)`);
+                            analysis.codeQuality.lackErrorHandling = true;
+                        }
+                        
+                        if (/function\s*\(/.test(content) && !(/=>\s*{/.test(content))) {
+                            analysis.recommendations.push(`${filename}: Pertimbangkan menggunakan arrow functions`);
+                        }
+                    }
+                    
+                    // General checks
+                    if (/console\.(log|debug|info)/.test(content)) {
+                        analysis.issues.push(`${filename}: Mengandung console statements`);
+                        analysis.codeQuality.hasDebugCode = true;
+                    }
+                    
+                    if (/TODO|FIXME|HACK|XXX/.test(content)) {
+                        analysis.issues.push(`${filename}: Mengandung TODO/FIXME comments`);
+                    }
+                    
+                    if (lineCount > 500) {
+                        analysis.issues.push(`${filename}: File terlalu besar (${lineCount} lines)`);
+                        analysis.codeQuality.hasLongFiles = true;
+                    }
+                    
+                    // Check for potential security issues
+                    if (/innerHTML\s*=/.test(content)) {
+                        analysis.issues.push(`${filename}: Menggunakan innerHTML (potential XSS risk)`);
+                    }
+                    
+                    if (/eval\s*\(/.test(content)) {
+                        analysis.issues.push(`${filename}: Menggunakan eval() (security risk)`);
+                    }
+                });
+
+                // Add general recommendations based on analysis
+                if (analysis.codeQuality.hasOldSyntax) {
+                    analysis.recommendations.push('Upgrade ke ES6+ syntax untuk better performance');
+                }
+                
+                if (analysis.codeQuality.lackErrorHandling) {
+                    analysis.recommendations.push('Tambahkan proper error handling untuk robustness');
+                }
+
+                return analysis;
+            }
+
+            displayAIPrompt(aiPrompt) {
+                this.elements.aiPromptContent.textContent = aiPrompt.aiPromptText;
+                
+                // Add analysis summary to results
+                const summaryHtml = this.createAnalysisSummary(aiPrompt.analysisResults);
+                this.displayAnalysisResult({
+                    title: '📊 Quick Analysis Summary',
+                    content: summaryHtml,
+                    timestamp: aiPrompt.timestamp,
+                    isHtml: true
+                });
+            }
+
+            createAnalysisSummary(analysis) {
+                return `
+Total Files: ${analysis.totalFiles}
+Total Lines: ${analysis.totalLines}
+File Types: ${Array.from(analysis.fileTypes).join(', ')}
+
+Issues Found: ${analysis.issues.length}
+${analysis.issues.slice(0, 5).map(i => `• ${i}`).join('\n')}
+${analysis.issues.length > 5 ? `... and ${analysis.issues.length - 5} more issues` : ''}
+
+Recommendations: ${analysis.recommendations.length}
+${analysis.recommendations.slice(0, 3).map(r => `• ${r}`).join('\n')}`;
+            }
+
+            async copyAIPrompt() {
+                if (!this.currentAIPrompt) {
+                    this.showMessage('Tidak ada AI prompt untuk dicopy!', 'error');
+                    return;
+                }
+
+                try {
+                    await navigator.clipboard.writeText(this.currentAIPrompt.aiPromptText);
+                    const btn = this.elements.copyPromptBtn;
+                    const originalText = btn.textContent;
+                    btn.textContent = '✅ Copied! Paste ke AI sekarang';
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                    }, 3000);
+                } catch (err) {
+                    console.error('Copy failed:', err);
+                    this.showMessage('Gagal copy ke clipboard. Silakan select dan copy manual.', 'error');
+                }
+            }
+
+            downloadAIReadyReport() {
+                if (!this.currentAIPrompt) {
+                    this.showMessage('Generate AI prompt terlebih dahulu!', 'error');
+                    return;
+                }
+
+                const reportContent = this.generateAIReadyReportContent();
+                const blob = new Blob([reportContent], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                
+                const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                a.href = url;
+                a.download = `ai-ready-prompt-${timestamp}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                this.showMessage('Report berhasil didownload!', 'success');
+            }
+
+            generateAIReadyReportContent() {
+                const report = [
+                    '=' .repeat(60),
+                    'AI-READY PROJECT ANALYSIS REPORT',
+                    '=' .repeat(60),
+                    `Generated: ${new Date().toLocaleString('id-ID')}`,
+                    `Total Files: ${this.uploadedFiles.size}`,
+                    '',
+                    '=' .repeat(60),
+                    'PROMPT FOR AI',
+                    '=' .repeat(60),
+                    '',
+                    this.currentAIPrompt.aiPromptText,
+                    '',
+                    '=' .repeat(60),
+                    'END OF REPORT',
+                    '=' .repeat(60)
+                ].join('\n');
+                
+                return report;
+            }
+
+            extractMentionedFiles(prompt) {
+                const mentions = prompt.match(/@(\S+)/g) || [];
+                return mentions.map(mention => mention.substring(1));
+            }
+
+            buildProjectContext(mentionedFiles) {
+                const context = {
+                    allFiles: Array.from(this.uploadedFiles.keys()),
+                    mentionedFiles: {},
+                    projectStructure: this.getProjectStructure(),
+                    fileContents: {}
+                };
+
+                const filesToInclude = mentionedFiles.length > 0 ? 
+                    mentionedFiles.filter(f => this.uploadedFiles.has(f)) : 
+                    Array.from(this.uploadedFiles.keys());
+
+                filesToInclude.forEach(filename => {
+                    const file = this.uploadedFiles.get(filename);
+                    if (file) {
+                        context.mentionedFiles[filename] = file.content;
+                        context.fileContents[filename] = file.content;
+                    }
+                });
+
+                return context;
+            }
+
+            getProjectStructure() {
+                const structure = {};
+                
+                this.uploadedFiles.forEach((file, filename) => {
+                    const path = file.path || filename;
+                    const parts = path.split(/[\/\\]/);
+                    let current = structure;
+                    
+                    for (let i = 0; i < parts.length; i++) {
+                        const part = parts[i];
+                        if (i === parts.length - 1) {
+                            current[part] = {
+                                type: 'file',
+                                size: file.size,
+                                path: path
+                            };
+                        } else {
+                            if (!current[part]) {
+                                current[part] = {
+                                    type: 'folder',
+                                    children: {}
+                                };
+                            }
+                            current = current[part].children;
+                        }
+                    }
+                });
+                
+                return structure;
+            }
+
+            generateStructureTree(structure, indent = 0) {
+                let tree = '';
+                const prefix = '  '.repeat(indent);
+                const entries = Object.entries(structure).sort((a, b) => {
+                    // Folders first, then files
+                    if (a[1].type === 'folder' && b[1].type === 'file') return -1;
+                    if (a[1].type === 'file' && b[1].type === 'folder') return 1;
+                    return a[0].localeCompare(b[0]);
+                });
+                
+                for (const [name, item] of entries) {
+                    if (item.type === 'folder') {
+                        tree += `${prefix}📁 ${name}/\n`;
+                        tree += this.generateStructureTree(item.children, indent + 1);
+                    } else {
+                        tree += `${prefix}📄 ${name} (${this.formatFileSize(item.size)})\n`;
+                    }
+                }
+                
+                return tree;
+            }
+
+            // Legacy analysis method (optimized)
+            async analyzeProject() {
+                const prompt = this.elements.analysisPrompt.value.trim();
+                
+                if (!prompt) {
+                    this.showMessage('Silakan masukkan permintaan analisa terlebih dahulu!', 'error');
+                    return;
+                }
+
+                if (this.uploadedFiles.size === 0) {
+                    this.showMessage('Silakan upload file project terlebih dahulu!', 'error');
+                    return;
+                }
+
+                this.setButtonLoading(this.elements.analyzeBtn, true, '📊 Menganalisa...');
+
+                try {
+                    const analysis = await this.performAnalysis(prompt);
+                    this.currentAnalysis = analysis;
+                    this.analysisHistory.push(analysis);
+                    this.displayAnalysisResult(analysis);
+                    this.showMessage('Analisa selesai!', 'success');
+                } catch (error) {
+                    console.error('Analysis error:', error);
+                    this.displayAnalysisResult({
+                        title: '❌ Error',
+                        content: 'Terjadi kesalahan saat menganalisa project: ' + error.message,
+                        timestamp: new Date().toLocaleString('id-ID')
+                    });
+                } finally {
+                    this.setButtonLoading(this.elements.analyzeBtn, false, '📊 Analisa Project (Old Method)');
+                }
+            }
+
+            async performAnalysis(prompt) {
+                await this.delay(1000);
+
+                const mentionedFiles = this.extractMentionedFiles(prompt);
+                const projectContext = this.buildProjectContext(mentionedFiles);
+                
+                return {
+                    title: '📊 Hasil Analisa Project',
+                    content: this.generateAnalysisResponse(prompt, projectContext),
+                    prompt: prompt,
+                    timestamp: new Date().toLocaleString('id-ID'),
+                    mentionedFiles: mentionedFiles,
+                    projectContext: projectContext
+                };
+            }
+
+            generateAnalysisResponse(prompt, context) {
+                const fileList = Object.keys(context.mentionedFiles).join(', ') || 'All files';
+                const cleanPrompt = prompt.replace(/@\S+/g, '').trim();
+                
+                return `ANALYSIS REQUEST: ${cleanPrompt}
+
+PROJECT CONTEXT:
+- Total Files: ${context.allFiles.length}
+- Files Analyzed: ${fileList}
+
+DETAILED ANALYSIS:
+${this.generateDetailedAnalysis(cleanPrompt, context)}
+
+RECOMMENDATIONS:
+${this.generateRecommendations(context)}
+
+NEXT STEPS:
+- Implementasikan perubahan yang disarankan
+- Test functionality setelah perubahan
+- Review ulang architecture jika diperlukan
+- Gunakan "Generate AI Prompt" untuk mendapatkan kode yang sudah diupdate
+
+CATATAN:
+Analisa ini berdasarkan pattern dan best practices umum. 
+Selalu test perubahan di environment development terlebih dahulu.`;
+            }
+
+            generateDetailedAnalysis(prompt, context) {
+                let analysis = '';
+
+                Object.entries(context.mentionedFiles).forEach(([filename, content]) => {
+                    analysis += `\n--- ANALYSIS FOR: ${filename} ---\n`;
+                    
+                    const ext = filename.split('.').pop().toLowerCase();
+                    
+                    if (['js', 'ts', 'jsx', 'tsx'].includes(ext)) {
+                        analysis += this.analyzeJavaScriptFile(content, filename);
+                    } else if (ext === 'html') {
+                        analysis += this.analyzeHTMLFile(content);
+                    } else if (ext === 'css') {
+                        analysis += this.analyzeCSSFile(content);
+                    } else if (ext === 'py') {
+                        analysis += this.analyzePythonFile(content);
+                    } else {
+                        analysis += this.analyzeGenericFile(content, filename);
+                    }
+
+                    analysis += this.checkCommonIssues(filename, content);
+                });
+
+                return analysis || 'No specific analysis available for the selected files.';
+            }
+
+            analyzeJavaScriptFile(content, filename) {
+                const lines = content.split('\n');
+                const functions = content.match(/(?:function\s+\w+|const\s+\w+\s*=\s*(?:async\s*)?\(|let\s+\w+\s*=\s*(?:async\s*)?\(|var\s+\w+\s*=\s*(?:async\s*)?\()/g) || [];
+                const classes = content.match(/class\s+\w+/g) || [];
+                const imports = content.match(/import\s+.+\s+from\s+['"].+['"]/g) || [];
+                const exports = content.match(/export\s+(?:default\s+)?(?:class|function|const|let|var)/g) || [];
+                
+                return `JavaScript/TypeScript Analysis:
+- Total Lines: ${lines.length}
+- Functions Found: ${functions.length}
+- Classes Found: ${classes.length}
+- Imports: ${imports.length}
+- Exports: ${exports.length}
+- Code Structure: ${lines.length > 300 ? 'Complex' : lines.length > 100 ? 'Medium' : 'Simple'}
+- Module Type: ${imports.length > 0 || exports.length > 0 ? 'ES6 Module' : 'Script'}
+- Potential Issues: ${this.checkJSIssues(content)}`;
+            }
+
+            analyzeHTMLFile(content) {
+                const elements = content.match(/<\/?(\w+)(?:\s|>)/g) || [];
+                const uniqueElements = new Set(elements.map(e => e.replace(/<\/?|>|\s/g, '')));
+                const scripts = content.match(/<script/gi) || [];
+                const styles = content.match(/<style/gi) || [];
+                const links = content.match(/<link/gi) || [];
+                
+                return `HTML Analysis:
+- Total Elements: ${elements.length}
+- Unique Elements: ${uniqueElements.size}
+- Script Tags: ${scripts.length}
+- Style Tags: ${styles.length}
+- Link Tags: ${links.length}
+- Structure Complexity: ${elements.length > 100 ? 'High' : elements.length > 50 ? 'Medium' : 'Low'}
+- HTML5: ${content.includes('<!DOCTYPE html>') ? 'Yes' : 'No'}`;
+            }
+
+            analyzeCSSFile(content) {
+                const rules = content.match(/[^{}]+\{[^{}]+\}/g) || [];
+                const selectors = content.match(/[^{}]+(?=\{)/g) || [];
+                const mediaQueries = content.match(/@media[^{]+\{/g) || [];
+                const variables = content.match(/--[\w-]+:/g) || [];
+                
+                return `CSS Analysis:
+- Total Rules: ${rules.length}
+- Selectors: ${selectors.length}
+- Media Queries: ${mediaQueries.length}
+- CSS Variables: ${variables.length}
+- Complexity: ${rules.length > 100 ? 'High' : rules.length > 50 ? 'Medium' : 'Low'}`;
+            }
+
+            analyzePythonFile(content) {
+                const lines = content.split('\n');
+                const functions = content.match(/def\s+\w+/g) || [];
+                const classes = content.match(/class\s+\w+/g) || [];
+                const imports = content.match(/(?:import|from)\s+[\w.]+/g) || [];
+                
+                return `Python Analysis:
+- Total Lines: ${lines.length}
+- Functions: ${functions.length}
+- Classes: ${classes.length}
+- Imports: ${imports.length}
+- Complexity: ${lines.length > 300 ? 'High' : lines.length > 100 ? 'Medium' : 'Low'}`;
+            }
+
+            analyzeGenericFile(content, filename) {
+                const lines = content.split('\n');
+                const ext = filename.split('.').pop();
+                
+                return `File Analysis (${ext}):
+- Total Lines: ${lines.length}
+- File Size: ${content.length} characters
+- Average Line Length: ${Math.round(content.length / lines.length)}
+- Empty Lines: ${lines.filter(l => l.trim() === '').length}`;
+            }
+
+            checkJSIssues(content) {
+                const issues = [];
+                
+                if (/console\.(log|debug|info|warn|error)/.test(content)) {
+                    issues.push('Console statements detected');
+                }
+                if (/\bvar\s+/.test(content)) {
+                    issues.push('Using var instead of let/const');
+                }
+                if (/==[^=]/.test(content)) {
+                    issues.push('Using loose equality operator');
+                }
+                if (/eval\s*\(/.test(content)) {
+                    issues.push('Using eval() - security risk');
+                }
+                if (!/(?:try|catch|finally)\s*\{/.test(content) && content.length > 1000) {
+                    issues.push('No error handling found');
+                }
+                
+                return issues.length > 0 ? issues.join(', ') : 'No major issues found';
+            }
+
+            checkCommonIssues(filename, content) {
+                const issues = [];
+                
+                if (content.length > 50000) {
+                    issues.push('File sangat besar, pertimbangkan untuk split');
+                }
+                
+                const longLines = content.split('\n').filter(line => line.length > 120);
+                if (longLines.length > 10) {
+                    issues.push(`${longLines.length} lines yang terlalu panjang (>120 chars)`);
+                }
+                
+                if (/password|secret|api[_-]?key/i.test(content) && /['"]\w{20,}['"]/.test(content)) {
+                    issues.push('Possible hardcoded credentials detected');
+                }
+                
+                return issues.length > 0 ? `\nPOTENTIAL ISSUES:\n${issues.map(i => `• ${i}`).join('\n')}` : '';
+            }
+
+            generateRecommendations(context) {
+                const recommendations = new Set();
+                
+                Object.entries(context.mentionedFiles).forEach(([filename, content]) => {
+                    const ext = filename.split('.').pop().toLowerCase();
+                    
+                    if (['js', 'ts', 'jsx', 'tsx'].includes(ext)) {
+                        if (content.includes('var ')) {
+                            recommendations.add(`Ganti 'var' dengan 'let/const' untuk better scoping`);
+                        }
+                        if (!content.includes('use strict') && !content.includes('import')) {
+                            recommendations.add(`Tambahkan 'use strict' untuk better error detection`);
+                        }
+                        if (content.length > 10000) {
+                            recommendations.add(`Split file ${filename} menjadi modul yang lebih kecil`);
+                        }
+                        if (!/async|await|Promise/.test(content) && content.includes('callback')) {
+                            recommendations.add('Pertimbangkan menggunakan async/await instead of callbacks');
+                        }
+                    }
+                    
+                    if (ext === 'html' && !content.includes('<!DOCTYPE html>')) {
+                        recommendations.add('Tambahkan <!DOCTYPE html> untuk HTML5 compliance');
+                    }
+                    
+                    if (ext === 'css' && content.length > 5000) {
+                        recommendations.add('Pertimbangkan menggunakan CSS preprocessor atau CSS-in-JS');
+                    }
+                });
+                
+                if (recommendations.size === 0) {
+                    recommendations.add('Struktur kode sudah cukup baik, fokus pada business logic optimization');
+                }
+                
+                return Array.from(recommendations).map((rec, index) => `${index + 1}. ${rec}`).join('\n');
+            }
+
+            displayAnalysisResult(analysis) {
+                const template = document.getElementById('resultTemplate');
+                const clone = template.content.cloneNode(true);
+                const resultElement = clone.querySelector('.analysis-result');
+                
+                resultElement.querySelector('.result-title').textContent = analysis.title;
+                resultElement.querySelector('.result-time').textContent = analysis.timestamp;
+                
+                const contentElement = resultElement.querySelector('.result-content');
+                if (analysis.isHtml) {
+                    contentElement.innerHTML = analysis.content;
+                } else {
+                    contentElement.textContent = analysis.content;
+                }
+                
+                // Add event listeners to buttons
+                const copyBtn = resultElement.querySelector('.copy-btn');
+                const clearBtn = resultElement.querySelector('.clear-btn');
+                
+                copyBtn.addEventListener('click', async () => {
+                    try {
+                        await navigator.clipboard.writeText(analysis.content);
+                        copyBtn.textContent = '✅ Copied!';
+                        setTimeout(() => {
+                            copyBtn.textContent = '📋 Copy';
+                        }, 2000);
+                    } catch (err) {
+                        console.error('Copy failed:', err);
+                    }
+                });
+                
+                clearBtn.addEventListener('click', () => {
+                    resultElement.remove();
+                    if (this.elements.resultsContainer.children.length === 0) {
+                        this.elements.resultsContainer.innerHTML = '<div class="placeholder">🚀 Upload project dan klik "Generate AI Prompt" untuk mulai</div>';
+                    }
+                });
+                
+                // Remove placeholder if exists
+                const placeholder = this.elements.resultsContainer.querySelector('.placeholder');
+                if (placeholder) {
+                    placeholder.remove();
+                }
+                
+                // Remove old messages
+                const messages = this.elements.resultsContainer.querySelectorAll('.message');
+                messages.forEach(m => m.remove());
+                
+                this.elements.resultsContainer.insertBefore(clone, this.elements.resultsContainer.firstChild);
+                this.elements.resultsContainer.scrollTop = 0;
+            }
+        }
+
+        // Initialize the application when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new EnhancedAIAnalyzer();
+        });
+    </script>
+</body>
+</html>
