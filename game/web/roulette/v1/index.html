@@ -884,7 +884,6 @@
         }
 
         function getDozen(number) {
-            if (number === 00) return 'D0';
             if (number === 0) return 'D0';
             if (number >= 1 && number <= 12) return 'D1';
             if (number >= 13 && number <= 24) return 'D2';
@@ -894,7 +893,6 @@
 
         function getColumn(number) {
             if (number === 0) return 'C0';
-            if (number === 00) return 'C0';
             if (rouletteData.columns.c1.includes(number)) return 'C1';
             if (rouletteData.columns.c2.includes(number)) return 'C2';
             if (rouletteData.columns.c3.includes(number)) return 'C3';
@@ -902,20 +900,20 @@
         }
 
         function getSize(number) {
-            if (number === 0 || number === 00) return 'ZERO';
+            if (number === 0) return 'ZERO';
             if (number >= 1 && number <= 18) return 'SMALL';
             if (number >= 19 && number <= 36) return 'BIG';
             return '-';
         }
 
         function getParity(number) {
-            if (number === 0 || number === 00) return 'ZERO';
+            if (number === 0) return 'ZERO';
             if (number % 2 === 0) return 'EVEN';
             return 'ODD';
         }
 
         function getColor(number) {
-            if (number === 0 || number === 00) return 'ZERO';
+            if (number === 0) return 'ZERO';
             if (rouletteData.redNumbers.includes(number)) return 'RED';
             return 'BLACK';
         }
@@ -923,26 +921,32 @@
         // Tambah angka baru
         function addNumber(number = null) {
             let inputNumber = number;
-            
-            if (!inputNumber) {
-                inputNumber = document.getElementById('numberInput').value;
-                if (inputNumber === '00') inputNumber = 00;
-                else inputNumber = parseInt(inputNumber);
+
+            // Only read from the input when no argument was provided (null or undefined).
+            if (inputNumber === null || inputNumber === undefined) {
+                const raw = document.getElementById('numberInput').value.trim();
+                if (raw === '00') {
+                    // keep as numeric 0 for internal logic (00 and 0 are treated the same in this implementation)
+                    inputNumber = 0;
+                } else {
+                    inputNumber = parseInt(raw, 10);
+                }
             }
 
-            if (isNaN(inputNumber) && inputNumber !== 00) {
+            // Validate number
+            if (Number.isNaN(inputNumber)) {
                 alert('Masukkan angka yang valid!');
                 return;
             }
 
-            if (inputNumber !== 00 && (inputNumber < 0 || inputNumber > 36)) {
+            if (inputNumber < 0 || inputNumber > 36) {
                 alert('Angka harus antara 0-36 atau 00!');
                 return;
             }
 
             // Simpan state sebelum perubahan untuk undo
             saveStateForUndo();
-            
+
             processNumber(inputNumber);
             document.getElementById('numberInput').value = '';
         }
@@ -978,7 +982,7 @@
 
         function containsNumber(category, number) {
             switch(category) {
-                case 'd0': return number === 00;
+                case 'd0': return number === 0;
                 case 'd1': return rouletteData.dozens.d1.includes(number);
                 case 'd2': return rouletteData.dozens.d2.includes(number);
                 case 'd3': return rouletteData.dozens.d3.includes(number);
@@ -986,13 +990,13 @@
                 case 'c1': return rouletteData.columns.c1.includes(number);
                 case 'c2': return rouletteData.columns.c2.includes(number);
                 case 'c3': return rouletteData.columns.c3.includes(number);
-                case 'zeroSize': return number === 00 || number === 0;
+                case 'zeroSize': return number === 0;
                 case 'small': return number > 0 && number <= 18;
                 case 'big': return number >= 19 && number <= 36;
-                case 'zeroParity': return number === 00 || number === 0;
-                case 'even': return number !== 00 && number !== 0 && number % 2 === 0;
-                case 'odd': return number !== 00 && number !== 0 && number % 2 === 1;
-                case 'zeroColor': return number === 00 || number === 0;
+                case 'zeroParity': return number === 0;
+                case 'even': return number !== 0 && number % 2 === 0;
+                case 'odd': return number !== 0 && number % 2 === 1;
+                case 'zeroColor': return number === 0;
                 case 'red': return rouletteData.redNumbers.includes(number);
                 case 'black': return rouletteData.blackNumbers.includes(number);
                 default: return false;
@@ -1001,7 +1005,7 @@
 
         function updateDisplay() {
             document.getElementById('currentNumber').textContent = 
-                currentNumber === 00 ? '00' : (currentNumber || '--');
+                (currentNumber === 0 ? '00' : (currentNumber !== null && currentNumber !== undefined ? currentNumber : '--'));
 
             updateStreakValue('d0', streaks.d0);
             updateStreakValue('d1', streaks.d1);
@@ -1053,10 +1057,10 @@
             history.forEach((item, index) => {
                 const div = document.createElement('div');
                 div.className = 'history-number';
-                div.textContent = item.number === 00 ? '00' : item.number;
-                div.title = `#${history.length - index}: ${item.number === 00 ? '00' : item.number}`;
+                div.textContent = (item.number === 0 ? '00' : item.number);
+                div.title = `#${history.length - index}: ${item.number === 0 ? '00' : item.number}`;
 
-                if (item.number === 0 || item.number === 00) {
+                if (item.number === 0) {
                     div.style.background = '#27ae60';
                 } else if (rouletteData.redNumbers.includes(item.number)) {
                     div.style.background = '#e74c3c';
@@ -1082,9 +1086,9 @@
                 // Number circle
                 const numberCircle = document.createElement('div');
                 numberCircle.className = 'history-number-large';
-                numberCircle.textContent = item.number === 00 ? '00' : item.number;
-                
-                if (item.number === 0 || item.number === 00) {
+                numberCircle.textContent = (item.number === 0 ? '00' : item.number);
+
+                if (item.number === 0) {
                     numberCircle.style.background = '#27ae60';
                 } else if (rouletteData.redNumbers.includes(item.number)) {
                     numberCircle.style.background = '#e74c3c';
