@@ -731,7 +731,6 @@
                         <div class="no-hot-categories" id="noHotCategories">
                             Belum ada Streak
                         </div>
-                        <!-- hotTitleCond will be rendered by JS to keep value in sync -->
                     </div>
                 </div>
         </div>
@@ -854,19 +853,9 @@
             hotContent.innerHTML = '';
 
             if (Object.keys(hotCategories).length === 0) {
-                // Tidak ada kategori HOT -> show the no-hot box and the streak condition below it
+                // Tidak ada kategori HOT -> show the no-hot box
                 noHotCategories.textContent = `Belum ada Streak`;
                 hotContent.appendChild(noHotCategories);
-
-                // Ensure the hot-title condition element exists and is attached below the no-hot box
-                let cond = document.getElementById('hotTitleCond');
-                if (!cond) {
-                    cond = document.createElement('div');
-                    cond.className = 'hot-note';
-                    cond.id = 'hotTitleCond';
-                }
-                cond.textContent = `Streak > ${threshold}`;
-                hotContent.appendChild(cond);
             } else {
                 // Ada kategori HOT
                 for (const [groupName, items] of Object.entries(hotCategories)) {
@@ -916,11 +905,6 @@
                     groupDiv.appendChild(titleDiv);
                     groupDiv.appendChild(itemsDiv);
                     hotContent.appendChild(groupDiv);
-                }
-                // If the hot condition note exists elsewhere, remove it so it doesn't linger
-                const existingCond = document.getElementById('hotTitleCond');
-                if (existingCond && existingCond.parentNode && existingCond.parentNode !== hotContent) {
-                    existingCond.parentNode.removeChild(existingCond);
                 }
             }
         }
@@ -1147,15 +1131,8 @@
             const n = parseInt(value, 10);
             if (Number.isNaN(n) || n <= 0) return;
             localStorage.setItem('hotThreshold', n.toString());
-            // refresh display (updateHotCategories will manage the hotTitleCond element)
+            // refresh display
             updateHotCategories();
-        }
-
-        function updateHotTitle() {
-            const cond = document.getElementById('hotTitleCond');
-            if (cond) {
-                cond.textContent = `Streak > ${getHotThreshold()}`;
-            }
         }
 
         // Initialize hot threshold control
@@ -1168,7 +1145,7 @@
                     setHotThreshold(v);
                 });
             }
-            // Render the hot categories and associated note based on current threshold
+            // Render the hot categories based on current threshold
             updateHotCategories();
         });
 
