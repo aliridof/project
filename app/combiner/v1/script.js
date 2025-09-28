@@ -1,6 +1,8 @@
 class DeepseekAnalyzer {
     constructor() {
         this.uploadedFiles = new Map();
+        this.analysisHistory = [];
+        this.currentAnalysis = null;
         this.initializeEventListeners();
     }
 
@@ -9,6 +11,7 @@ class DeepseekAnalyzer {
         const fileInput = document.getElementById('fileInput');
         const uploadArea = document.getElementById('uploadArea');
         const analyzeBtn = document.getElementById('analyzeBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
 
         // Drag and drop functionality
         uploadArea.addEventListener('click', () => fileInput.click());
@@ -21,6 +24,9 @@ class DeepseekAnalyzer {
 
         // Analyze button
         analyzeBtn.addEventListener('click', this.analyzeProject.bind(this));
+
+        // Download button
+        downloadBtn.addEventListener('click', this.downloadAnalysisReport.bind(this));
     }
 
     handleDragOver(e) {
@@ -59,7 +65,8 @@ class DeepseekAnalyzer {
                     name: file.name,
                     content: content,
                     size: file.size,
-                    type: file.type
+                    type: file.type,
+                    path: file.webkitRelativePath || file.name
                 });
             } catch (error) {
                 console.error(`Error reading file ${file.name}:`, error);
@@ -158,7 +165,12 @@ class DeepseekAnalyzer {
 
         try {
             const analysis = await this.performAnalysis(prompt);
+            this.currentAnalysis = analysis;
+            this.analysisHistory.push(analysis);
             this.displayAnalysisResult(analysis);
+            
+            // Enable download button
+            document.getElementById('downloadBtn').disabled = false;
         } catch (error) {
             console.error('Analysis error:', error);
             this.displayAnalysisResult({
@@ -181,7 +193,10 @@ class DeepseekAnalyzer {
         return {
             title: '📊 Hasil Analisa Project',
             content: this.generateAnalysisResponse(prompt, projectContext),
-            timestamp: new Date().toLocaleTimeString()
+            prompt: prompt,
+            timestamp: new Date().toLocaleString(),
+            mentionedFiles: mentionedFiles,
+            projectContext: projectContext
         };
     }
 
@@ -194,19 +209,22 @@ class DeepseekAnalyzer {
         const context = {
             allFiles: Array.from(this.uploadedFiles.keys()),
             mentionedFiles: {},
-            projectStructure: this.getProjectStructure()
+            projectStructure: this.getProjectStructure(),
+            fileContents: {}
         };
 
         if (mentionedFiles.length === 0) {
             // If no specific files mentioned, include all files
             this.uploadedFiles.forEach((file, filename) => {
                 context.mentionedFiles[filename] = file.content;
+                context.fileContents[filename] = file.content;
             });
         } else {
             // Only include mentioned files
             mentionedFiles.forEach(filename => {
                 if (this.uploadedFiles.has(filename)) {
                     context.mentionedFiles[filename] = this.uploadedFiles.get(filename).content;
+                    context.fileContents[filename] = this.uploadedFiles.get(filename).content;
                 }
             });
         }
@@ -215,23 +233,33 @@ class DeepseekAnalyzer {
     }
 
     getProjectStructure() {
-        const files = Array.from(this.uploadedFiles.keys());
         const structure = {};
         
-        files.forEach(file => {
-            const parts = file.split('/');
+        this.uploadedFiles.forEach((file, filename) => {
+            const path = file.path || filename;
+            const parts = path.split('/');
             let current = structure;
             
-            parts.forEach((part, index) => {
-                if (index === parts.length - 1) {
-                    current[part] = 'file';
+            for (let i = 0; i < parts.length; i++) {
+                const part = parts[i];
+                if (i === parts.length - 1) {
+                    // File
+                    current[part] = {
+                        type: 'file',
+                        size: file.size,
+                        path: path
+                    };
                 } else {
-                    if (!current[part]) {
-                        current[part] = {};
+                    // Folder
+                    if (!current[part] || current[part].type !== 'folder') {
+                        current[part] = {
+                            type: 'folder',
+                            children: {}
+                        };
                     }
-                    current = current[part];
+                    current = current[part].children;
                 }
-            });
+            }
         });
         
         return structure;
@@ -245,15 +273,12 @@ class DeepseekAnalyzer {
 PROJECT CONTEXT:
 - Total Files: ${context.allFiles.length}
 - Files Analyzed: ${fileList}
-- Project Structure: ${JSON.stringify(context.projectStructure, null, 2)}
 
 DETAILED ANALYSIS:
 ${this.generateDetailedAnalysis(prompt, context)}
 
 RECOMMENDATIONS:
-1. Perbaikan yang disarankan untuk file-file yang dianalisa
-2. Optimasi struktur kode
-3. Best practices implementation
+${this.generateRecommendations(context)}
 
 NEXT STEPS:
 - Implementasikan perubahan yang disarankan
@@ -357,6 +382,30 @@ Selalu test perubahan di environment development terlebih dahulu.`;
         return issues.length > 0 ? `\nISSUES: ${issues.join('; ')}` : '\nNo major structural issues';
     }
 
+    generateRecommendations(context) {
+        let recommendations = [];
+        
+        Object.entries(context.mentionedFiles).forEach(([filename, content]) => {
+            if (filename.endsWith('.js') && content.length > 5000) {
+                recommendations.push(`Pertimbangkan untuk memecah file ${filename} menjadi modul yang lebih kecil`);
+            }
+            
+            if (content.includes('var ')) {
+                recommendations.push(`Ganti 'var' dengan 'let/const' di file ${filename}`);
+            }
+            
+            if (content.includes('==')) {
+                recommendations.push(`Gunakan '===' instead of '==' di file ${filename}`);
+            }
+        });
+        
+        if (recommendations.length === 0) {
+            recommendations.push('Struktur kode sudah baik, pertahankan!');
+        }
+        
+        return recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n');
+    }
+
     displayAnalysisResult(analysis) {
         const resultsContainer = document.getElementById('resultsContainer');
         const template = document.getElementById('resultTemplate');
@@ -383,6 +432,10 @@ Selalu test perubahan di environment development terlebih dahulu.`;
         
         clearBtn.addEventListener('click', () => {
             resultElement.remove();
+            // If no results left, show placeholder
+            if (resultsContainer.children.length === 0) {
+                resultsContainer.innerHTML = '<div class="placeholder">🚀 Upload project dan klik "Analisa Project" untuk mulai</div>';
+            }
         });
         
         // Remove placeholder if it exists
@@ -394,20 +447,176 @@ Selalu test perubahan di environment development terlebih dahulu.`;
         resultsContainer.prepend(resultElement);
         resultsContainer.scrollTop = 0;
     }
+
+    // NEW: Function to generate and download analysis report
+    downloadAnalysisReport() {
+        if (!this.currentAnalysis) {
+            alert('Tidak ada analisa untuk didownload! Silakan analisa project terlebih dahulu.');
+            return;
+        }
+
+        const reportContent = this.generateReportContent();
+        const blob = new Blob([reportContent], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        
+        a.href = url;
+        a.download = `deepseek-analysis-report-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    generateReportContent() {
+        let report = '';
+        
+        // Header
+        report += '='.repeat(80) + '\n';
+        report += 'DEEPSEEK PROJECT ANALYSIS REPORT\n';
+        report += '='.repeat(80) + '\n\n';
+        
+        // Metadata
+        report += `Generated: ${new Date().toLocaleString()}\n`;
+        report += `Total Files: ${this.uploadedFiles.size}\n`;
+        report += `Analysis Request: ${this.currentAnalysis.prompt}\n\n`;
+        
+        // Project Structure
+        report += 'PROJECT STRUCTURE\n';
+        report += '-'.repeat(40) + '\n';
+        report += this.generateStructureTree(this.getProjectStructure()) + '\n\n';
+        
+        // File Contents with line numbers
+        report += 'FILE CONTENTS WITH ANALYSIS\n';
+        report += '-'.repeat(40) + '\n\n';
+        
+        this.uploadedFiles.forEach((file, filename) => {
+            report += `FILE: ${filename}\n`;
+            report += `PATH: ${file.path || filename}\n`;
+            report += `SIZE: ${this.formatFileSize(file.size)}\n`;
+            report += '-'.repeat(60) + '\n\n';
+            
+            // File content with line numbers
+            const lines = file.content.split('\n');
+            lines.forEach((line, index) => {
+                report += `${(index + 1).toString().padStart(4)}: ${line}\n`;
+            });
+            
+            // File-specific analysis
+            report += '\n' + 'ANALYSIS FOR THIS FILE:\n';
+            report += '~'.repeat(30) + '\n';
+            report += this.generateFileAnalysis(filename, file.content) + '\n\n';
+            
+            report += '='.repeat(80) + '\n\n';
+        });
+        
+        // Overall Analysis
+        report += 'OVERALL ANALYSIS AND RECOMMENDATIONS\n';
+        report += '-'.repeat(50) + '\n\n';
+        report += this.currentAnalysis.content + '\n\n';
+        
+        // Analysis History
+        if (this.analysisHistory.length > 1) {
+            report += 'ANALYSIS HISTORY\n';
+            report += '-'.repeat(30) + '\n\n';
+            this.analysisHistory.forEach((analysis, index) => {
+                report += `Analysis #${index + 1} (${analysis.timestamp}):\n`;
+                report += `Request: ${analysis.prompt}\n`;
+                report += `Files Analyzed: ${analysis.mentionedFiles.join(', ') || 'All files'}\n`;
+                report += '---\n\n';
+            });
+        }
+        
+        return report;
+    }
+
+    generateStructureTree(structure, indent = 0) {
+        let tree = '';
+        const prefix = '  '.repeat(indent);
+        
+        for (const [name, item] of Object.entries(structure)) {
+            if (item.type === 'folder') {
+                tree += `${prefix}📁 ${name}/\n`;
+                tree += this.generateStructureTree(item.children, indent + 1);
+            } else {
+                tree += `${prefix}📄 ${name} (${this.formatFileSize(item.size)})\n`;
+            }
+        }
+        
+        return tree;
+    }
+
+    generateFileAnalysis(filename, content) {
+        let analysis = '';
+        
+        if (filename.endsWith('.js')) {
+            analysis += this.analyzeJavaScriptFile(content);
+        } else if (filename.endsWith('.html')) {
+            analysis += this.analyzeHTMLFile(content);
+        } else if (filename.endsWith('.css')) {
+            analysis += this.analyzeCSSFile(content);
+        } else {
+            analysis += `File Type: ${filename.split('.').pop() || 'Unknown'}\n`;
+            analysis += `Line Count: ${content.split('\n').length}\n`;
+            analysis += `File Size: ${content.length} characters\n`;
+        }
+        
+        // Add specific recommendations
+        analysis += '\nRECOMMENDATIONS:\n';
+        const recommendations = this.getFileRecommendations(filename, content);
+        recommendations.forEach((rec, index) => {
+            analysis += `${index + 1}. ${rec}\n`;
+        });
+        
+        return analysis;
+    }
+
+    getFileRecommendations(filename, content) {
+        const recommendations = [];
+        
+        if (filename.endsWith('.js')) {
+            if (content.includes('var ')) {
+                recommendations.push('Ganti "var" dengan "let" atau "const" untuk better scoping');
+            }
+            if (content.includes('==')) {
+                recommendations.push('Gunakan "===" untuk strict equality checks');
+            }
+            if (content.includes('console.log')) {
+                recommendations.push('Hapus atau comment console.log statements untuk production');
+            }
+            if (content.length > 5000) {
+                recommendations.push('Pertimbangkan untuk memecah file menjadi modul yang lebih kecil');
+            }
+        }
+        
+        if (filename.endsWith('.html')) {
+            if (!content.includes('<!DOCTYPE html>')) {
+                recommendations.push('Tambahkan DOCTYPE declaration');
+            }
+            if (!content.includes('<meta charset="UTF-8">')) {
+                recommendations.push('Tambahkan charset meta tag');
+            }
+            if (!content.includes('<meta name="viewport"')) {
+                recommendations.push('Tambahkan viewport meta tag untuk responsive design');
+            }
+        }
+        
+        if (filename.endsWith('.css')) {
+            const longSelectors = content.match(/([^{]+\{[^}]+\})/g)?.filter(rule => rule.length > 200) || [];
+            if (longSelectors.length > 0) {
+                recommendations.push('Pertimbangkan untuk memecah CSS rules yang terlalu panjang');
+            }
+        }
+        
+        if (recommendations.length === 0) {
+            recommendations.push('Tidak ada rekomendasi spesifik - file terlihat baik');
+        }
+        
+        return recommendations;
+    }
 }
 
 // Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     new DeepseekAnalyzer();
 });
-
-// Add some utility functions
-window.utils = {
-    formatCode: function(code, language) {
-        return `\`\`\`${language}\n${code}\n\`\`\``;
-    },
-    
-    estimateAnalysisTime: function(filesCount) {
-        return Math.max(2000, filesCount * 1000); // Minimum 2 seconds
-    }
-};

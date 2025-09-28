@@ -241,6 +241,7 @@ header p {
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s;
+    margin-bottom: 10px;
 }
 
 .analyze-btn:hover {
@@ -249,6 +250,31 @@ header p {
 }
 
 .analyze-btn:disabled {
+    background: #bdc3c7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Download Button Styles */
+.download-btn {
+    width: 100%;
+    padding: 15px;
+    background: #9b59b6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.download-btn:hover:not(:disabled) {
+    background: #8e44ad;
+    transform: translateY(-2px);
+}
+
+.download-btn:disabled {
     background: #bdc3c7;
     cursor: not-allowed;
     transform: none;
