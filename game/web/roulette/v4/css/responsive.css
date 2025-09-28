@@ -10,6 +10,10 @@
     .hot-content {
         grid-template-columns: repeat(2, 1fr);
     }
+
+    .streak-history-items {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
 
 @media (max-width: 768px) {
@@ -47,7 +51,15 @@
         grid-template-columns: 1fr;
     }
 
+    .streak-history-items {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
     .hot-title {
+        font-size: 1.2em;
+    }
+
+    .streak-history-title {
         font-size: 1.2em;
     }
 }
@@ -78,5 +90,15 @@
     .undo-counter {
         padding: 10px;
         min-width: 60px;
+    }
+
+    .streak-history-items {
+        grid-template-columns: 1fr;
+    }
+
+    .streak-history-header {
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
     }
 }

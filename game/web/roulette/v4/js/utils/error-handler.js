@@ -1,26 +1,57 @@
 // Error handling utilities
 class ErrorHandler {
     static init() {
-        window.addEventListener('error', this.handleGlobalError.bind(this));
-        window.addEventListener('unhandledrejection', this.handlePromiseRejection.bind(this));
+        try {
+            window.addEventListener('error', this.handleGlobalError.bind(this));
+            window.addEventListener('unhandledrejection', this.handlePromiseRejection.bind(this));
+        } catch (error) {
+            console.error('Failed to initialize error handler:', error);
+        }
     }
 
     static handleGlobalError(event) {
-        console.error('Global error:', event.error);
-        this.showNotification('Terjadi kesalahan sistem', 'error');
+        try {
+            const error = event.error;
+            this.logError('Global error:', error);
+            this.showNotification('Terjadi kesalahan sistem', 'error');
+        } catch (fallbackError) {
+            console.error('Critical error in error handler:', fallbackError);
+        }
     }
 
     static handlePromiseRejection(event) {
-        console.error('Unhandled promise rejection:', event.reason);
-        event.preventDefault();
+        try {
+            const reason = event.reason;
+            this.logError('Unhandled promise rejection:', reason);
+            event.preventDefault();
+        } catch (error) {
+            console.error('Error handling promise rejection:', error);
+        }
+    }
+
+    static handleError(error, context = '') {
+        try {
+            const message = context ? `${context}: ${error.message}` : error.message;
+            this.logError(message, error);
+            this.showNotification(message, 'error');
+        } catch (fallbackError) {
+            console.error('Critical error in error handler:', fallbackError, 'Original error:', error);
+        }
+    }
+
+    static logError(message, error) {
+        if (typeof console !== 'undefined' && console.error) {
+            console.error(message, error);
+        }
     }
 
     static showNotification(message, type = 'info') {
-        // Implementation moved to notification.js
-        if (typeof Notification !== 'undefined') {
-            Notification.show(message, type);
-        } else {
-            console.log(`${type.toUpperCase()}: ${message}`);
+        try {
+            if (typeof Notification !== 'undefined') {
+                Notification.show(message, type);
+            }
+        } catch (error) {
+            console.error('Failed to show notification:', error);
         }
     }
 }
