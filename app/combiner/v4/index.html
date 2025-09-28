@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced AI Project Analyzer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧠 Enhanced AI Project Analyzer</h1>
+            <p>Upload project, generate AI-ready prompts, dan dapatkan kode yang sudah diupgrade</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Upload Section -->
+            <section class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <h3>Drop project files here</h3>
+                    <p>atau <span class="browse-link">browse files</span></p>
+                    <input type="file" id="fileInput" multiple webkitdirectory directory>
+                    <div class="supported-formats">
+                        📄 Supported: .js, .html, .css, .md, .txt, .json, .py, .tsx, .ts, .jsx, .vue, .php, .java, .cpp, .c, .go, .rs, .rb, .swift
+                    </div>
+                </div>
+                
+                <div class="uploaded-files" id="uploadedFiles" style="display: none;">
+                    <h4>📋 Files Terupload:</h4>
+                    <div class="files-list" id="filesList"></div>
+                </div>
+            </section>
+
+            <!-- Analysis Section -->
+            <section class="analysis-section">
+                <div class="analysis-controls">
+                    <div class="input-group">
+                        <label for="analysisPrompt">Permintaan:</label>
+                        <textarea 
+                            id="analysisPrompt" 
+                            placeholder="Contoh: Tambahkan fitur autosave, perbaiki bug di fungsi login, upgrade ke modern ES6 syntax, tambahkan error handling..."
+                            rows="4"
+                        ></textarea>
+                    </div>
+
+                    <div class="file-mention-tools">
+                        <label>🔍 Mention Files:</label>
+                        <div class="file-buttons" id="fileButtons"></div>
+                    </div>
+
+                    <button id="generateBtn" class="generate-btn">
+                        🚀 GENERATE
+                    </button>
+
+                    <button id="downloadBtn" class="download-btn" disabled>
+                        💾 Download AI-Ready Report
+                    </button>
+                </div>
+            </section>
+        </div>
+
+        <!-- AI Prompt Section -->
+        <section class="ai-prompt-section" id="aiPromptSection" style="display: none;">
+            <h3>🤖 AI-Ready Prompt & Analysis Results</h3>
+            <div class="ai-prompt-content" id="aiPromptContent">
+                <div class="prompt-placeholder">
+                    Generate AI Prompt akan muncul di sini...
+                </div>
+            </div>
+            <button class="copy-prompt-btn" id="copyPromptBtn">
+                📋 Copy Full Prompt untuk AI
+            </button>
+        </section>
+
+        <!-- Templates -->
+        <template id="fileItemTemplate">
+            <div class="file-item">
+                <span class="file-icon">📄</span>
+                <span class="file-name"></span>
+                <span class="file-size"></span>
+                <button class="mention-btn" title="Mention file ini">@</button>
+            </div>
+        </template>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
