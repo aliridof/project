@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deepseek Project Analyzer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧠 Deepseek Project Analyzer</h1>
+            <p>Upload project Anda dan dapatkan analisa mendalam</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Upload Section -->
+            <section class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <h3>Drop project files here</h3>
+                    <p>atau <span class="browse-link">browse files</span></p>
+                    <input type="file" id="fileInput" multiple webkitdirectory directory>
+                    <div class="supported-formats">
+                        📄 Supported: .js, .html, .css, .md, .txt, .json
+                    </div>
+                </div>
+                
+                <div class="uploaded-files" id="uploadedFiles">
+                    <h4>📋 Files Terupload:</h4>
+                    <div class="files-list" id="filesList"></div>
+                </div>
+            </section>
+
+            <!-- Analysis Section -->
+            <section class="analysis-section">
+                <div class="analysis-controls">
+                    <div class="input-group">
+                        <label for="analysisPrompt">🎯 Permintaan Analisa:</label>
+                        <textarea 
+                            id="analysisPrompt" 
+                            placeholder="Contoh: Analisa file app.js dan state-manager.js, perbaiki bug di fungsi updateStreaks..."
+                            rows="4"
+                        ></textarea>
+                    </div>
+
+                    <div class="file-mention-tools">
+                        <label>📝 Mention Files:</label>
+                        <div class="file-buttons" id="fileButtons"></div>
+                    </div>
+
+                    <button id="analyzeBtn" class="analyze-btn">
+                        🔍 Analisa Project
+                    </button>
+                </div>
+
+                <div class="results-section">
+                    <h4>📊 Hasil Analisa:</h4>
+                    <div class="results-container" id="resultsContainer">
+                        <div class="placeholder">
+                            🚀 Upload project dan klik "Analisa Project" untuk mulai
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Template untuk file item -->
+        <template id="fileItemTemplate">
+            <div class="file-item">
+                <span class="file-icon">📄</span>
+                <span class="file-name"></span>
+                <span class="file-size"></span>
+                <button class="mention-btn" title="Mention file ini">@</button>
+            </div>
+        </template>
+
+        <!-- Template untuk analysis result -->
+        <template id="resultTemplate">
+            <div class="analysis-result">
+                <div class="result-header">
+                    <span class="result-title"></span>
+                    <span class="result-time"></span>
+                </div>
+                <div class="result-content"></div>
+                <div class="result-actions">
+                    <button class="copy-btn">📋 Copy</button>
+                    <button class="clear-btn">🗑️ Hapus</button>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
