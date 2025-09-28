@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roulette Tracker - Kategori</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+
+        .current-number {
+            font-size: 3.5em;
+            font-weight: bold;
+            color: #e74c3c;
+            margin: 15px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* HOT KATEGORI Section */
+        .hot-categories-section {
+            margin-bottom: 30px;
+        }
+
+        .hot-categories {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+            border: 3px solid #ff4757;
+        }
+
+        .hot-title {
+            color: white;
+            font-size: 1.4em;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .hot-title::before {
+            content: "🔥";
+            font-size: 1.2em;
+        }
+
+        .hot-title::after {
+            content: "🔥";
+            font-size: 1.2em;
+        }
+
+        .hot-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .hot-category-group {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            padding: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-left: 5px solid #ff4757;
+        }
+
+        .hot-category-title {
+            color: #2c3e50;
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+            text-align: center;
+            border-bottom: 2px solid #ff4757;
+            padding-bottom: 4px;
+        }
+
+        .hot-category-items {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .hot-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 8px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 3px solid #ff4757;
+        }
+
+        .hot-item-label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.85em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .hot-item-value {
+            font-weight: bold;
+            font-size: 1em;
+            color: #ff4757;
+            min-width: 30px;
+            text-align: center;
+            background: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid #ff4757;
+        }
+
+        .no-hot-categories {
+            text-align: center;
+            color: white;
+            font-size: 1.1em;
+            font-weight: 600;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+        }
+
+        /* Horizontal Categories */
+        .categories-horizontal {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .category-group {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            border-left: 5px solid #3498db;
+        }
+
+        .category-group h3 {
+            color: #2c3e50;
+            margin-bottom: 12px;
+            font-size: 1.1em;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 6px;
+            text-align: center;
+        }
+
+        .category-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 8px 0;
+            padding: 8px;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .category-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: #34495e;
+            font-size: 0.9em;
+        }
+
+        .bullet {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .bullet-red {
+            background: #e74c3c;
+        }
+
+        .bullet-black {
+            background: #2c3e50;
+        }
+
+        .bullet-green {
+            background: #27ae60;
+        }
+
+        .streak-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            min-width: 40px;
+            text-align: center;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: #ecf0f1;
+        }
+
+        .streak-normal {
+            color: #7f8c8d;
+        }
+
+        .streak-medium {
+            color: #ffbf00;
+            font-weight: bolder;
+        }
+
+        .streak-high {
+            color: #00abff;
+            font-weight: bolder;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin: 30px 0 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .main-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .undo-controls {
+            display: flex;
+            gap: 5px;
+        }
+
+        input {
+            width: 100px;
+            padding: 12px;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            font-size: 1.1em;
+            text-align: center;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        button {
+            padding: 12px 25px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .undo-btn {
+            background: #e74c3c;
+            padding: 12px 20px;
+        }
+
+        .undo-btn:hover:not(:disabled) {
+            background: #c0392b;
+        }
+
+        .undo-counter {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #34495e;
+            color: white;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            min-width: 80px;
+        }
+
+        /* History Sections */
+        .history-sections {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .history-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .history-title {
+            color: #2c3e50;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: 600;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+        }
+
+        /* Grid History */
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .history-number {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-weight: bold;
+            color: white;
+            font-size: 0.7em;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .history-counter {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 0.9em;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        /* Vertical History */
+        .vertical-history {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .history-item {
+            display: grid;
+            grid-template-columns: 60px 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+
+        .history-number-large {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-weight: bold;
+            color: white;
+            font-size: 1.2em;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .history-details {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .history-detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85em;
+            color: #2c3e50;
+        }
+
+        .history-detail-label {
+            font-weight: 600;
+            min-width: 120px;
+        }
+
+        .history-detail-value {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .categories-horizontal {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .history-sections {
+                grid-template-columns: 1fr;
+            }
+
+            .hot-content {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .categories-horizontal {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .current-number {
+                font-size: 2.8em;
+            }
+            
+            .history-grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .main-controls, .undo-controls {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .hot-content {
+                grid-template-columns: 1fr;
+            }
+
+            .hot-title {
+                font-size: 1.2em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .categories-horizontal {
+                grid-template-columns: 1fr;
+            }
+            
+            .history-grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
+            
+            .history-item {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            
+            .history-number-large {
+                margin: 0 auto;
+            }
+            
+            button {
+                padding: 10px 15px;
+                font-size: 1em;
+            }
+            
+            .undo-counter {
+                padding: 10px;
+                min-width: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Roulette Tracker</h1>
+            <div class="current-number" id="currentNumber">--</div>
+        </div>
+
+        <!-- Categories Horizontal Layout -->
+        <div class="categories-horizontal">
+            <!-- DOZEN -->
+            <div class="category-group">
+                <h3>DOZEN</h3>
+                <div class="category-item">
+                    <span class="category-label">
+                        <span class="bullet bullet-green"></span>
+                        D0
+                    </span>
+                    <span class="streak-value streak-normal" id="d0-value">00</span>
+                </div>
+                <div class="category-item">
+                    <span class="category-label">D1</span>
+                    <span class="streak-value streak-normal" id="d1-value">00</span>
+                </div>
+                <div class="category-item">
+                    <span class="category-label">D2</span>
+                    <span class="streak-value streak-normal" id="d2-value">00</span>
+                </div>
+                <div class="category-item">
+                    <span class="category-label">D3</span>
+                    <span class="streak-value streak-normal" id="d3-value">00</span>
+                </div>
+            </div>
+
+            <!-- COLUMN -->
+            <div class="category-group">
+                <h3>COLUMN</h3>
+                <div class="category-item">
+                    <span class="category-label">
+                        <span class="bullet bullet-green"></span>
+                        C0
+                    </span>
+                    <span class="streak-value streak-normal" id="c0-value">00</span>
+                </div>
+                <div class="category-item">
+                    <span class="category-label">C1</span>
+                    <span class="streak-value streak-normal" id="c1-value">00</span>
+                </div>
+                <div class="category-item">
+                    <span class="category-label">C2</span>
+                    <span class="streak-value streak-normal" id="c2-value">00</span>
+                </div>
+                <div class="category-item">
+                    <span class="category-label">C3</span>
+                    <span class="streak-value streak-normal" id="c3-value">00</span>
+                </div>
+            </div>
+
+            <!-- BESAR-KECIL -->
+            <div class="category-group">
+                <h3>BESAR - KECIL</h3>
+                <div class="category-item">
+                    <span class="category-label">
+                        <span class="bullet bullet-green"></span>
+                        ZERO
+                    </span>
+                    <span class="streak-value streak-normal" id="zero-size-value">00</span>
+                </div>
+                <div class="category-item">
+                    <span class="category-label">SMALL</span>
+                    <span class="streak-value streak-normal" id="small-value">00</span>
+                </div>
+                <div class="category-item">
+                    <span class="category-label">BIG</span>
+                    <span class="streak-value streak-normal" id="big-value">00</span>
+                </div>
+            </div>
+
+            <!-- GANJIL-GENAP -->
+            <div class="category-group">
+                <h3>GANJIL - GENAP</h3>
+                <div class="category-item">
+                    <span class="category-label">
+                        <span class="bullet bullet-green"></span>
+                        ZERO
+                    </span>
+                    <span class="streak-value streak-normal" id="zero-parity-value">00</span>
+                </div>
+                <div class="category-item">
+                    <span class="category-label">EVEN</span>
+                    <span class="streak-value streak-normal" id="even-value">00</span>
+                </div>
+                <div class="category-item">
+                    <span class="category-label">ODD</span>
+                    <span class="streak-value streak-normal" id="odd-value">00</span>
+                </div>
+            </div>
+
+            <!-- HITAM-MERAH -->
+            <div class="category-group">
+                <h3>HITAM - MERAH</h3>
+                <div class="category-item">
+                    <span class="category-label">
+                        <span class="bullet bullet-green"></span>
+                        ZERO
+                    </span>
+                    <span class="streak-value streak-normal" id="zero-color-value">00</span>
+                </div>
+                <div class="category-item">
+                    <span class="category-label">
+                        <span class="bullet bullet-red"></span>
+                        RED
+                    </span>
+                    <span class="streak-value streak-normal" id="red-value">00</span>
+                </div>
+                <div class="category-item">
+                    <span class="category-label">
+                        <span class="bullet bullet-black"></span>
+                        BLACK
+                    </span>
+                    <span class="streak-value streak-normal" id="black-value">00</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- HOT KATEGORI Section -->
+        <div class="hot-categories-section">
+            <div class="hot-categories">
+                <div class="hot-title">HOT KATEGORI (Streak > 5)</div>
+                <div class="hot-content" id="hotContent">
+                    <div class="no-hot-categories" id="noHotCategories">
+                        Belum ada kategori yang HOT (Streak > 5)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls dengan Undo -->
+        <div class="controls">
+            <div class="main-controls">
+                <input type="text" id="numberInput" placeholder="00" maxlength="2">
+                <button onclick="addNumber()">TAMBAH</button>
+                <button onclick="resetAll()">RESET</button>
+            </div>
+            <div class="undo-controls">
+                <button class="undo-btn" onclick="undo()" id="undoBtn" disabled>
+                    UNDO
+                </button>
+                <div class="undo-counter" id="undoCounter">
+                    ↩️ 0/5
+                </div>
+            </div>
+        </div>
+
+        <!-- History Sections -->
+        <div class="history-sections">
+            <!-- Grid History -->
+            <div class="history-section">
+                <div class="history-title">HISTORY GRID (Last 100 Numbers)</div>
+                <div class="history-grid" id="historyGrid">
+                    <!-- Grid history akan diisi oleh JavaScript -->
+                </div>
+                <div class="history-counter" id="gridCounter">Total: 0 numbers</div>
+            </div>
+
+            <!-- Vertical History -->
+            <div class="history-section">
+                <div class="history-title">DETAIL HISTORY</div>
+                <div class="vertical-history" id="verticalHistory">
+                    <!-- Vertical history akan diisi oleh JavaScript -->
+                </div>
+                <div class="history-counter" id="verticalCounter">Total: 0 numbers</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data roulette
+        const rouletteData = {
+            redNumbers: [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36],
+            blackNumbers: [2,4,6,8,10,11,13,15,17,20,22,24,26,28,29,31,33,35],
+            
+            columns: {
+                c1: [1,4,7,10,13,16,19,22,25,28,31,34],
+                c2: [2,5,8,11,14,17,20,23,26,29,32,35],
+                c3: [3,6,9,12,15,18,21,24,27,30,33,36]
+            },
+            
+            dozens: {
+                d1: [1,2,3,4,5,6,7,8,9,10,11,12],
+                d2: [13,14,15,16,17,18,19,20,21,22,23,24],
+                d3: [25,26,27,28,29,30,31,32,33,34,35,36]
+            }
+        };
+
+        // State aplikasi
+        let streaks = {
+            d0: 0, d1: 0, d2: 0, d3: 0,
+            c0: 0, c1: 0, c2: 0, c3: 0,
+            zeroSize: 0, small: 0, big: 0,
+            zeroParity: 0, even: 0, odd: 0,
+            zeroColor: 0, red: 0, black: 0
+        };
+
+        let currentNumber = null;
+        let history = [];
+        let undoStack = [];
+        const MAX_UNDO = 5;
+
+        // Mapping kategori untuk HOT display
+        const categoryMapping = {
+            d0: { group: 'DOZEN', label: 'D0' },
+            d1: { group: 'DOZEN', label: 'D1' },
+            d2: { group: 'DOZEN', label: 'D2' },
+            d3: { group: 'DOZEN', label: 'D3' },
+            c0: { group: 'COLUMN', label: 'C0' },
+            c1: { group: 'COLUMN', label: 'C1' },
+            c2: { group: 'COLUMN', label: 'C2' },
+            c3: { group: 'COLUMN', label: 'C3' },
+            zeroSize: { group: 'BESAR-KECIL', label: 'ZERO' },
+            small: { group: 'BESAR-KECIL', label: 'SMALL' },
+            big: { group: 'BESAR-KECIL', label: 'BIG' },
+            zeroParity: { group: 'GANJIL-GENAP', label: 'ZERO' },
+            even: { group: 'GANJIL-GENAP', label: 'EVEN' },
+            odd: { group: 'GANJIL-GENAP', label: 'ODD' },
+            zeroColor: { group: 'HITAM-MERAH', label: 'ZERO' },
+            red: { group: 'HITAM-MERAH', label: 'RED' },
+            black: { group: 'HITAM-MERAH', label: 'BLACK' }
+        };
+
+        // Update HOT Categories
+        function updateHotCategories() {
+            const hotContent = document.getElementById('hotContent');
+            const noHotCategories = document.getElementById('noHotCategories');
+            
+            // Filter categories dengan streak > 5
+            const hotCategories = {};
+            for (const [key, value] of Object.entries(streaks)) {
+                if (value > 5) {
+                    const mapping = categoryMapping[key];
+                    if (!hotCategories[mapping.group]) {
+                        hotCategories[mapping.group] = [];
+                    }
+                    hotCategories[mapping.group].push({
+                        label: mapping.label,
+                        value: value
+                    });
+                }
+            }
+
+            // Clear content
+            hotContent.innerHTML = '';
+
+            if (Object.keys(hotCategories).length === 0) {
+                // Tidak ada kategori HOT
+                hotContent.appendChild(noHotCategories);
+            } else {
+                // Ada kategori HOT
+                for (const [groupName, items] of Object.entries(hotCategories)) {
+                    const groupDiv = document.createElement('div');
+                    groupDiv.className = 'hot-category-group';
+                    
+                    const titleDiv = document.createElement('div');
+                    titleDiv.className = 'hot-category-title';
+                    titleDiv.textContent = groupName;
+                    
+                    const itemsDiv = document.createElement('div');
+                    itemsDiv.className = 'hot-category-items';
+                    
+                    items.forEach(item => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'hot-item';
+                        
+                        const labelSpan = document.createElement('span');
+                        labelSpan.className = 'hot-item-label';
+                        
+                        // Add bullet for categories
+                        if (item.label === 'RED') {
+                            const bullet = document.createElement('span');
+                            bullet.className = 'bullet bullet-red';
+                            labelSpan.appendChild(bullet);
+                        } else if (item.label === 'BLACK') {
+                            const bullet = document.createElement('span');
+                            bullet.className = 'bullet bullet-black';
+                            labelSpan.appendChild(bullet);
+                        } else if (item.label === 'ZERO' || item.label === 'D0' || item.label === 'C0') {
+                            const bullet = document.createElement('span');
+                            bullet.className = 'bullet bullet-green';
+                            labelSpan.appendChild(bullet);
+                        }
+                        
+                        labelSpan.appendChild(document.createTextNode(item.label));
+                        
+                        const valueSpan = document.createElement('span');
+                        valueSpan.className = 'hot-item-value';
+                        valueSpan.textContent = item.value.toString().padStart(2, '0');
+                        
+                        itemDiv.appendChild(labelSpan);
+                        itemDiv.appendChild(valueSpan);
+                        itemsDiv.appendChild(itemDiv);
+                    });
+                    
+                    groupDiv.appendChild(titleDiv);
+                    groupDiv.appendChild(itemsDiv);
+                    hotContent.appendChild(groupDiv);
+                }
+            }
+        }
+
+        // Fungsi untuk menyimpan state saat ini untuk undo
+        function saveStateForUndo() {
+            if (undoStack.length >= MAX_UNDO) {
+                undoStack.shift(); // Hapus state paling lama jika sudah mencapai batas
+            }
+            
+            undoStack.push({
+                streaks: {...streaks},
+                currentNumber: currentNumber,
+                history: [...history]
+            });
+            
+            updateUndoButton();
+        }
+
+        // Fungsi undo
+        function undo() {
+            if (undoStack.length === 0) return;
+            
+            const previousState = undoStack.pop();
+            
+            streaks = {...previousState.streaks};
+            currentNumber = previousState.currentNumber;
+            history = [...previousState.history];
+            
+            updateDisplay();
+            updateHistory();
+            updateHotCategories();
+            updateUndoButton();
+        }
+
+        // Update tombol undo
+        function updateUndoButton() {
+            const undoBtn = document.getElementById('undoBtn');
+            const undoCounter = document.getElementById('undoCounter');
+            
+            undoBtn.disabled = undoStack.length === 0;
+            undoCounter.textContent = `↩️ ${undoStack.length}/${MAX_UNDO}`;
+            
+            if (undoStack.length === 0) {
+                undoCounter.style.background = '#bdc3c7';
+            } else {
+                undoCounter.style.background = '#34495e';
+            }
+        }
+
+        // Fungsi untuk mendapatkan kategori dari angka
+        function getNumberCategories(number) {
+            return {
+                dozen: getDozen(number),
+                column: getColumn(number),
+                size: getSize(number),
+                parity: getParity(number),
+                color: getColor(number)
+            };
+        }
+
+        function getDozen(number) {
+            if (number === 00) return 'D0';
+            if (number === 0) return 'D0';
+            if (number >= 1 && number <= 12) return 'D1';
+            if (number >= 13 && number <= 24) return 'D2';
+            if (number >= 25 && number <= 36) return 'D3';
+            return '-';
+        }
+
+        function getColumn(number) {
+            if (number === 0) return 'C0';
+            if (number === 00) return 'C0';
+            if (rouletteData.columns.c1.includes(number)) return 'C1';
+            if (rouletteData.columns.c2.includes(number)) return 'C2';
+            if (rouletteData.columns.c3.includes(number)) return 'C3';
+            return '-';
+        }
+
+        function getSize(number) {
+            if (number === 0 || number === 00) return 'ZERO';
+            if (number >= 1 && number <= 18) return 'SMALL';
+            if (number >= 19 && number <= 36) return 'BIG';
+            return '-';
+        }
+
+        function getParity(number) {
+            if (number === 0 || number === 00) return 'ZERO';
+            if (number % 2 === 0) return 'EVEN';
+            return 'ODD';
+        }
+
+        function getColor(number) {
+            if (number === 0 || number === 00) return 'ZERO';
+            if (rouletteData.redNumbers.includes(number)) return 'RED';
+            return 'BLACK';
+        }
+
+        // Tambah angka baru
+        function addNumber(number = null) {
+            let inputNumber = number;
+            
+            if (!inputNumber) {
+                inputNumber = document.getElementById('numberInput').value;
+                if (inputNumber === '00') inputNumber = 00;
+                else inputNumber = parseInt(inputNumber);
+            }
+
+            if (isNaN(inputNumber) && inputNumber !== 00) {
+                alert('Masukkan angka yang valid!');
+                return;
+            }
+
+            if (inputNumber !== 00 && (inputNumber < 0 || inputNumber > 36)) {
+                alert('Angka harus antara 0-36 atau 00!');
+                return;
+            }
+
+            // Simpan state sebelum perubahan untuk undo
+            saveStateForUndo();
+            
+            processNumber(inputNumber);
+            document.getElementById('numberInput').value = '';
+        }
+
+        function processNumber(number) {
+            const categories = getNumberCategories(number);
+            currentNumber = number;
+            
+            // Simpan data lengkap termasuk kategori
+            history.unshift({
+                number: number,
+                categories: categories,
+                timestamp: new Date().toLocaleTimeString()
+            });
+            
+            if (history.length > 100) history.pop();
+
+            updateStreaks(number);
+            updateDisplay();
+            updateHistory();
+            updateHotCategories();
+        }
+
+        function updateStreaks(number) {
+            for (let key in streaks) {
+                if (containsNumber(key, number)) {
+                    streaks[key] = 0;
+                } else {
+                    streaks[key]++;
+                }
+            }
+        }
+
+        function containsNumber(category, number) {
+            switch(category) {
+                case 'd0': return number === 00;
+                case 'd1': return rouletteData.dozens.d1.includes(number);
+                case 'd2': return rouletteData.dozens.d2.includes(number);
+                case 'd3': return rouletteData.dozens.d3.includes(number);
+                case 'c0': return number === 0;
+                case 'c1': return rouletteData.columns.c1.includes(number);
+                case 'c2': return rouletteData.columns.c2.includes(number);
+                case 'c3': return rouletteData.columns.c3.includes(number);
+                case 'zeroSize': return number === 00 || number === 0;
+                case 'small': return number > 0 && number <= 18;
+                case 'big': return number >= 19 && number <= 36;
+                case 'zeroParity': return number === 00 || number === 0;
+                case 'even': return number !== 00 && number !== 0 && number % 2 === 0;
+                case 'odd': return number !== 00 && number !== 0 && number % 2 === 1;
+                case 'zeroColor': return number === 00 || number === 0;
+                case 'red': return rouletteData.redNumbers.includes(number);
+                case 'black': return rouletteData.blackNumbers.includes(number);
+                default: return false;
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('currentNumber').textContent = 
+                currentNumber === 00 ? '00' : (currentNumber || '--');
+
+            updateStreakValue('d0', streaks.d0);
+            updateStreakValue('d1', streaks.d1);
+            updateStreakValue('d2', streaks.d2);
+            updateStreakValue('d3', streaks.d3);
+            updateStreakValue('c0', streaks.c0);
+            updateStreakValue('c1', streaks.c1);
+            updateStreakValue('c2', streaks.c2);
+            updateStreakValue('c3', streaks.c3);
+            updateStreakValue('zero-size', streaks.zeroSize);
+            updateStreakValue('small', streaks.small);
+            updateStreakValue('big', streaks.big);
+            updateStreakValue('zero-parity', streaks.zeroParity);
+            updateStreakValue('even', streaks.even);
+            updateStreakValue('odd', streaks.odd);
+            updateStreakValue('zero-color', streaks.zeroColor);
+            updateStreakValue('red', streaks.red);
+            updateStreakValue('black', streaks.black);
+        }
+
+        function updateStreakValue(id, value) {
+            const element = document.getElementById(id + '-value');
+            if (element) {
+                const formattedValue = value.toString().padStart(2, '0');
+                element.textContent = formattedValue;
+                
+                element.classList.remove('streak-normal', 'streak-medium', 'streak-high');
+                
+                if (value > 10) {
+                    element.classList.add('streak-high');
+                } else if (value > 5) {
+                    element.classList.add('streak-medium');
+                } else {
+                    element.classList.add('streak-normal');
+                }
+            }
+        }
+
+        function updateHistory() {
+            updateGridHistory();
+            updateVerticalHistory();
+        }
+
+        function updateGridHistory() {
+            const container = document.getElementById('historyGrid');
+            const counter = document.getElementById('gridCounter');
+            container.innerHTML = '';
+
+            history.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'history-number';
+                div.textContent = item.number === 00 ? '00' : item.number;
+                div.title = `#${history.length - index}: ${item.number === 00 ? '00' : item.number}`;
+
+                if (item.number === 0 || item.number === 00) {
+                    div.style.background = '#27ae60';
+                } else if (rouletteData.redNumbers.includes(item.number)) {
+                    div.style.background = '#e74c3c';
+                } else {
+                    div.style.background = '#2c3e50';
+                }
+
+                container.appendChild(div);
+            });
+
+            counter.textContent = `Total: ${history.length} numbers`;
+        }
+
+        function updateVerticalHistory() {
+            const container = document.getElementById('verticalHistory');
+            const counter = document.getElementById('verticalCounter');
+            container.innerHTML = '';
+
+            history.forEach((item, index) => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+
+                // Number circle
+                const numberCircle = document.createElement('div');
+                numberCircle.className = 'history-number-large';
+                numberCircle.textContent = item.number === 00 ? '00' : item.number;
+                
+                if (item.number === 0 || item.number === 00) {
+                    numberCircle.style.background = '#27ae60';
+                } else if (rouletteData.redNumbers.includes(item.number)) {
+                    numberCircle.style.background = '#e74c3c';
+                } else {
+                    numberCircle.style.background = '#2c3e50';
+                }
+
+                // Details
+                const details = document.createElement('div');
+                details.className = 'history-details';
+
+                const detailsHTML = `
+                    <div class="history-detail-item">
+                        <span class="history-detail-label">DOZEN:</span>
+                        <span class="history-detail-value">${item.categories.dozen}</span>
+                    </div>
+                    <div class="history-detail-item">
+                        <span class="history-detail-label">COLUMN:</span>
+                        <span class="history-detail-value">${item.categories.column}</span>
+                    </div>
+                    <div class="history-detail-item">
+                        <span class="history-detail-label">BESAR-KECIL:</span>
+                        <span class="history-detail-value">${item.categories.size}</span>
+                    </div>
+                    <div class="history-detail-item">
+                        <span class="history-detail-label">GANJIL-GENAP:</span>
+                        <span class="history-detail-value">${item.categories.parity}</span>
+                    </div>
+                    <div class="history-detail-item">
+                        <span class="history-detail-label">HITAM-MERAH:</span>
+                        <span class="history-detail-value">
+                            ${item.categories.color === 'RED' ? '<span class="bullet bullet-red"></span>' : ''}
+                            ${item.categories.color === 'BLACK' ? '<span class="bullet bullet-black"></span>' : ''}
+                            ${item.categories.color === 'ZERO' ? '<span class="bullet bullet-green"></span>' : ''}
+                            ${item.categories.color}
+                        </span>
+                    </div>
+                `;
+
+                details.innerHTML = detailsHTML;
+
+                historyItem.appendChild(numberCircle);
+                historyItem.appendChild(details);
+                container.appendChild(historyItem);
+            });
+
+            counter.textContent = `Total: ${history.length} numbers`;
+        }
+
+        function resetAll() {
+            if (!confirm('Reset semua streak, history, dan undo stack?')) return;
+
+            // Simpan state sebelum reset untuk undo
+            saveStateForUndo();
+            
+            for (let key in streaks) {
+                streaks[key] = 0;
+            }
+            currentNumber = null;
+            history = [];
+            // Jangan reset undo stack saat reset all, biarkan user bisa undo reset
+            updateDisplay();
+            updateHistory();
+            updateHotCategories();
+            document.getElementById('currentNumber').textContent = '--';
+        }
+
+        // Event listener untuk Enter key
+        document.getElementById('numberInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addNumber();
+            }
+        });
+
+        // Event listener untuk Ctrl+Z (undo shortcut)
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+                e.preventDefault();
+                undo();
+            }
+        });
+
+    </script>
+</body>
+</html>
