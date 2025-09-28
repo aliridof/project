@@ -921,4 +921,312 @@
 
                 if (mentionedFiles.length === 0) {
                     // If no specific files mentioned, include all files
-                    this.uploadedFiles.forEach((file
+                    this.uploadedFiles.forEach((file, filename) => {
+                        context.mentionedFiles[filename] = file.content;
+                        context.fileContents[filename] = file.content;
+                    });
+                } else {
+                    // Only include mentioned files
+                    mentionedFiles.forEach(filename => {
+                        if (this.uploadedFiles.has(filename)) {
+                            context.mentionedFiles[filename] = this.uploadedFiles.get(filename).content;
+                            context.fileContents[filename] = this.uploadedFiles.get(filename).content;
+                        }
+                    });
+                }
+
+                return context;
+            }
+
+            getProjectStructure() {
+                const structure = {};
+                
+                this.uploadedFiles.forEach((file, filename) => {
+                    const path = file.path || filename;
+                    const parts = path.split('/');
+                    let current = structure;
+                    
+                    for (let i = 0; i < parts.length; i++) {
+                        const part = parts[i];
+                        if (i === parts.length - 1) {
+                            // File
+                            current[part] = {
+                                type: 'file',
+                                size: file.size,
+                                path: path
+                            };
+                        } else {
+                            // Folder
+                            if (!current[part] || current[part].type !== 'folder') {
+                                current[part] = {
+                                    type: 'folder',
+                                    children: {}
+                                };
+                            }
+                            current = current[part].children;
+                        }
+                    }
+                });
+                
+                return structure;
+            }
+
+            generateStructureTree(structure, indent = 0) {
+                let tree = '';
+                const prefix = '  '.repeat(indent);
+                
+                for (const [name, item] of Object.entries(structure)) {
+                    if (item.type === 'folder') {
+                        tree += `${prefix}📁 ${name}/\n`;
+                        tree += this.generateStructureTree(item.children, indent + 1);
+                    } else {
+                        tree += `${prefix}📄 ${name} (${this.formatFileSize(item.size)})\n`;
+                    }
+                }
+                
+                return tree;
+            }
+
+            // Legacy analysis method (kept for backward compatibility)
+            async analyzeProject() {
+                const prompt = document.getElementById('analysisPrompt').value.trim();
+                
+                if (!prompt) {
+                    alert('Silakan masukkan permintaan analisa terlebih dahulu!');
+                    return;
+                }
+
+                if (this.uploadedFiles.size === 0) {
+                    alert('Silakan upload file project terlebih dahulu!');
+                    return;
+                }
+
+                const analyzeBtn = document.getElementById('analyzeBtn');
+                analyzeBtn.disabled = true;
+                analyzeBtn.textContent = '📊 Menganalisa...';
+
+                try {
+                    const analysis = await this.performAnalysis(prompt);
+                    this.currentAnalysis = analysis;
+                    this.analysisHistory.push(analysis);
+                    this.displayAnalysisResult(analysis);
+                } catch (error) {
+                    console.error('Analysis error:', error);
+                    this.displayAnalysisResult({
+                        title: '❌ Error',
+                        content: 'Terjadi kesalahan saat menganalisa project: ' + error.message
+                    });
+                } finally {
+                    analyzeBtn.disabled = false;
+                    analyzeBtn.textContent = '📊 Analisa Project (Old Method)';
+                }
+            }
+
+            async performAnalysis(prompt) {
+                // Simulate API call delay
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                const mentionedFiles = this.extractMentionedFiles(prompt);
+                const projectContext = this.buildProjectContext(mentionedFiles);
+                
+                return {
+                    title: '📊 Hasil Analisa Project',
+                    content: this.generateAnalysisResponse(prompt, projectContext),
+                    prompt: prompt,
+                    timestamp: new Date().toLocaleString(),
+                    mentionedFiles: mentionedFiles,
+                    projectContext: projectContext
+                };
+            }
+
+            generateAnalysisResponse(prompt, context) {
+                const fileList = Object.keys(context.mentionedFiles).join(', ');
+                
+                return `ANALYSIS REQUEST: ${prompt}
+
+PROJECT CONTEXT:
+- Total Files: ${context.allFiles.length}
+- Files Analyzed: ${fileList}
+
+DETAILED ANALYSIS:
+${this.generateDetailedAnalysis(prompt, context)}
+
+RECOMMENDATIONS:
+${this.generateRecommendations(context)}
+
+NEXT STEPS:
+- Implementasikan perubahan yang disarankan
+- Test functionality setelah perubahan
+- Review ulang architecture jika diperlukan
+
+CATATAN:
+Analisa ini berdasarkan pattern dan best practices umum. 
+Selalu test perubahan di environment development terlebih dahulu.`;
+            }
+
+            generateDetailedAnalysis(prompt, context) {
+                let analysis = '';
+
+                Object.entries(context.mentionedFiles).forEach(([filename, content]) => {
+                    analysis += `\n--- ANALYSIS FOR: ${filename} ---\n`;
+                    
+                    // Simple analysis based on file type and content
+                    if (filename.endsWith('.js') || filename.endsWith('.ts') || filename.endsWith('.jsx') || filename.endsWith('.tsx')) {
+                        analysis += this.analyzeJavaScriptFile(content);
+                    } else if (filename.endsWith('.html')) {
+                        analysis += this.analyzeHTMLFile(content);
+                    } else if (filename.endsWith('.css')) {
+                        analysis += this.analyzeCSSFile(content);
+                    } else {
+                        analysis += `File type: ${filename.split('.').pop()}\n`;
+                        analysis += `Lines: ${content.split('\n').length}\n`;
+                        analysis += `Size: ${content.length} characters\n`;
+                    }
+
+                    // Check for common issues
+                    analysis += this.checkCommonIssues(filename, content);
+                });
+
+                return analysis;
+            }
+
+            analyzeJavaScriptFile(content) {
+                const lines = content.split('\n');
+                const functions = content.match(/function\s+(\w+)|const\s+(\w+)\s*=\s*\(|let\s+(\w+)\s*=\s*\(/g) || [];
+                const classes = content.match(/class\s+(\w+)/g) || [];
+                
+                return `JavaScript/TypeScript Analysis:
+- Total Lines: ${lines.length}
+- Functions Found: ${functions.length}
+- Classes Found: ${classes.length}
+- Code Structure: ${lines.length > 100 ? 'Complex' : 'Simple'}
+- Potential Issues: ${this.checkJSIssues(content)}`;
+            }
+
+            analyzeHTMLFile(content) {
+                const elements = content.match(/<\/?(\w+)/g) || [];
+                const uniqueElements = [...new Set(elements)].length;
+                
+                return `HTML Analysis:
+- Total Elements: ${elements.length}
+- Unique Elements: ${uniqueElements}
+- Structure Complexity: ${elements.length > 50 ? 'High' : 'Medium'}`;
+            }
+
+            analyzeCSSFile(content) {
+                const rules = content.match(/([^{]+\{[^}]+\})/g) || [];
+                const selectors = content.match(/([^{]+)\{/g) || [];
+                
+                return `CSS Analysis:
+- Total Rules: ${rules.length}
+- Selectors: ${selectors.length}
+- Specificity Analysis: Standard`;
+            }
+
+            checkJSIssues(content) {
+                const issues = [];
+                
+                if (content.includes('console.log')) {
+                    issues.push('Debug statements found');
+                }
+                if (content.includes('var ')) {
+                    issues.push('Using var instead of let/const');
+                }
+                if (content.includes('==') && !content.includes('===')) {
+                    issues.push('Using loose equality operator');
+                }
+                
+                return issues.length > 0 ? issues.join(', ') : 'No major issues found';
+            }
+
+            checkCommonIssues(filename, content) {
+                const issues = [];
+                
+                // Large file check
+                if (content.length > 10000) {
+                    issues.push('File terlalu besar, pertimbangkan untuk split');
+                }
+                
+                // Long lines check
+                const longLines = content.split('\n').filter(line => line.length > 120);
+                if (longLines.length > 5) {
+                    issues.push('Banyak line yang terlalu panjang');
+                }
+                
+                return issues.length > 0 ? `\nISSUES: ${issues.join('; ')}` : '\nNo major structural issues';
+            }
+
+            generateRecommendations(context) {
+                let recommendations = [];
+                
+                Object.entries(context.mentionedFiles).forEach(([filename, content]) => {
+                    if ((filename.endsWith('.js') || filename.endsWith('.ts')) && content.length > 5000) {
+                        recommendations.push(`Pertimbangkan untuk memecah file ${filename} menjadi modul yang lebih kecil`);
+                    }
+                    
+                    if (content.includes('var ')) {
+                        recommendations.push(`Ganti 'var' dengan 'let/const' di file ${filename}`);
+                    }
+                    
+                    if (content.includes('==') && !content.includes('===')) {
+                        recommendations.push(`Gunakan '===' instead of '==' di file ${filename}`);
+                    }
+                });
+                
+                if (recommendations.length === 0) {
+                    recommendations.push('Struktur kode sudah baik, pertahankan!');
+                }
+                
+                return recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n');
+            }
+
+            displayAnalysisResult(analysis) {
+                const resultsContainer = document.getElementById('resultsContainer');
+                const template = document.getElementById('resultTemplate');
+                
+                const clone = template.content.cloneNode(true);
+                const resultElement = clone.querySelector('.analysis-result');
+                
+                resultElement.querySelector('.result-title').textContent = analysis.title;
+                resultElement.querySelector('.result-time').textContent = analysis.timestamp;
+                resultElement.querySelector('.result-content').textContent = analysis.content;
+                
+                // Add event listeners to buttons
+                const copyBtn = resultElement.querySelector('.copy-btn');
+                const clearBtn = resultElement.querySelector('.clear-btn');
+                
+                copyBtn.addEventListener('click', () => {
+                    navigator.clipboard.writeText(analysis.content).then(() => {
+                        copyBtn.textContent = '✅ Copied!';
+                        setTimeout(() => {
+                            copyBtn.textContent = '📋 Copy';
+                        }, 2000);
+                    });
+                });
+                
+                clearBtn.addEventListener('click', () => {
+                    resultElement.remove();
+                    // If no results left, show placeholder
+                    if (resultsContainer.children.length === 0) {
+                        resultsContainer.innerHTML = '<div class="placeholder">🚀 Upload project dan klik "Generate AI Prompt" untuk mulai</div>';
+                    }
+                });
+                
+                // Remove placeholder if it exists
+                const placeholder = resultsContainer.querySelector('.placeholder');
+                if (placeholder) {
+                    placeholder.remove();
+                }
+                
+                resultsContainer.prepend(resultElement);
+                resultsContainer.scrollTop = 0;
+            }
+        }
+
+        // Initialize the application when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new EnhancedDeepseekAnalyzer();
+        });
+    </script>
+</body>
+</html>
