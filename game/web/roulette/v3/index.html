@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roulette Tracker - Kategori</title>
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Roulette Tracker</h1>
+            <div class="current-number" id="currentNumber">--</div>
+        </div>
+
+        <!-- Categories Horizontal Layout -->
+        <div class="categories-horizontal">
+            <!-- DOZEN -->
+            <div class="category-group">
+                <h3>DOZEN</h3>
+                <div class="category-item">
+                    <span class="category-label">
+                        <span class="bullet bullet-green"></span>
+                        D0
+                    </span>
+                    <span class="streak-value streak-normal" id="d0-value">00</span>
+                </div>
+                <div class="category-item">
+                    <span class="category-label">D1</span>
+                    <span class="streak-value streak-normal" id="d1-value">00</span>
+                </div>
+                <div class="category-item">
+                    <span class="category-label">D2</span>
+                    <span class="streak-value streak-normal" id="d2-value">00</span>
+                </div>
+                <div class="category-item">
+                    <span class="category-label">D3</span>
+                    <span class="streak-value streak-normal" id="d3-value">00</span>
+                </div>
+            </div>
+
+            <!-- COLUMN -->
+            <div class="category-group">
+                <h3>COLUMN</h3>
+                <div class="category-item">
+                    <span class="category-label">
+                        <span class="bullet bullet-green"></span>
+                        C0
+                    </span>
+                    <span class="streak-value streak-normal" id="c0-value">00</span>
+                </div>
+                <div class="category-item">
+                    <span class="category-label">C1</span>
+                    <span class="streak-value streak-normal" id="c1-value">00</span>
+                </div>
+                <div class="category-item">
+                    <span class="category-label">C2</span>
+                    <span class="streak-value streak-normal" id="c2-value">00</span>
+                </div>
+                <div class="category-item">
+                    <span class="category-label">C3</span>
+                    <span class="streak-value streak-normal" id="c3-value">00</span>
+                </div>
+            </div>
+
+            <!-- BESAR-KECIL -->
+            <div class="category-group">
+                <h3>BESAR - KECIL</h3>
+                <div class="category-item">
+                    <span class="category-label">
+                        <span class="bullet bullet-green"></span>
+                        ZERO
+                    </span>
+                    <span class="streak-value streak-normal" id="zero-size-value">00</span>
+                </div>
+                <div class="category-item">
+                    <span class="category-label">SMALL</span>
+                    <span class="streak-value streak-normal" id="small-value">00</span>
+                </div>
+                <div class="category-item">
+                    <span class="category-label">BIG</span>
+                    <span class="streak-value streak-normal" id="big-value">00</span>
+                </div>
+            </div>
+
+            <!-- GANJIL-GENAP -->
+            <div class="category-group">
+                <h3>GANJIL - GENAP</h3>
+                <div class="category-item">
+                    <span class="category-label">
+                        <span class="bullet bullet-green"></span>
+                        ZERO
+                    </span>
+                    <span class="streak-value streak-normal" id="zero-parity-value">00</span>
+                </div>
+                <div class="category-item">
+                    <span class="category-label">EVEN</span>
+                    <span class="streak-value streak-normal" id="even-value">00</span>
+                </div>
+                <div class="category-item">
+                    <span class="category-label">ODD</span>
+                    <span class="streak-value streak-normal" id="odd-value">00</span>
+                </div>
+            </div>
+
+            <!-- HITAM-MERAH -->
+            <div class="category-group">
+                <h3>HITAM - MERAH</h3>
+                <div class="category-item">
+                    <span class="category-label">
+                        <span class="bullet bullet-green"></span>
+                        ZERO
+                    </span>
+                    <span class="streak-value streak-normal" id="zero-color-value">00</span>
+                </div>
+                <div class="category-item">
+                    <span class="category-label">
+                        <span class="bullet bullet-red"></span>
+                        RED
+                    </span>
+                    <span class="streak-value streak-normal" id="red-value">00</span>
+                </div>
+                <div class="category-item">
+                    <span class="category-label">
+                        <span class="bullet bullet-black"></span>
+                        BLACK
+                    </span>
+                    <span class="streak-value streak-normal" id="black-value">00</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- HOT KATEGORI Section -->
+        <div class="hot-categories-section">
+            <div class="hot-categories">
+                <div class="hot-title">STREAK</div>
+                <div class="hot-threshold-row">
+                    <div class="hot-threshold-control">
+                        <label for="hotThreshold">Threshold</label>
+                        <input type="number" id="hotThreshold" min="1" max="999" value="5">
+                    </div>
+                </div>
+                <div class="hot-content" id="hotContent">
+                    <div class="no-hot-categories" id="noHotCategories">
+                        Belum ada Streak
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls dengan Undo -->
+        <div class="controls">
+            <div class="main-controls">
+                <input type="text" id="numberInput" placeholder="00" maxlength="2">
+                <button id="addNumberBtn">TAMBAH</button>
+                <button id="resetBtn">RESET</button>
+            </div>
+            <div class="undo-controls">
+                <button class="undo-btn" id="undoBtn" disabled>UNDO</button>
+                <div class="undo-counter" id="undoCounter">↩️ 0/5</div>
+            </div>
+        </div>
+
+        <!-- History Sections -->
+        <div class="history-sections">
+            <div class="history-section">
+                <div class="history-title">HISTORY GRID (Last 100 Numbers)</div>
+                <div class="history-grid" id="historyGrid"></div>
+                <div class="history-counter" id="gridCounter">Total: 0 numbers</div>
+            </div>
+            <div class="history-section">
+                <div class="history-title">DETAIL HISTORY</div>
+                <div class="vertical-history" id="verticalHistory"></div>
+                <div class="history-counter" id="verticalCounter">Total: 0 numbers</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Files -->
+    <script src="js/config/constants.js"></script>
+    <script src="js/config/roulette-data.js"></script>
+    <script src="js/utils/error-handler.js"></script>
+    <script src="js/utils/storage.js"></script>
+    <script src="js/utils/helpers.js"></script>
+    <script src="js/core/validator.js"></script>
+    <script src="js/core/streak-manager.js"></script>
+    <script src="js/core/state-manager.js"></script>
+    <script src="js/ui/dom-manager.js"></script>
+    <script src="js/ui/hot-categories.js"></script>
+    <script src="js/ui/history-manager.js"></script>
+    <script src="js/ui/notification.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/utils/init.js"></script>
+</body>
+</html>
