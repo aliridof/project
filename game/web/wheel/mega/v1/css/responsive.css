@@ -1,0 +1,131 @@
+@media (max-width: 1024px) {
+    .categories-horizontal {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .history-sections {
+        grid-template-columns: 1fr;
+    }
+
+    .hot-content {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .streak-history-items {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .categories-horizontal {
+        grid-template-columns: 1fr;
+    }
+    
+    .container {
+        padding: 20px;
+    }
+    
+    .header h1 {
+        font-size: 1.8em;
+    }
+    
+    .current-number {
+        font-size: 2.8em;
+    }
+    
+    .history-grid {
+        grid-template-columns: repeat(5, 1fr);
+    }
+    
+    .controls {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .main-controls, .undo-controls {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .hot-content {
+        grid-template-columns: 1fr;
+    }
+
+    .streak-history-items {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .hot-title {
+        font-size: 1.2em;
+    }
+
+    .streak-history-title {
+        font-size: 1.2em;
+    }
+
+    .multiplier-info {
+        font-size: 0.8em;
+    }
+
+    .multiplier-item {
+        flex-direction: column;
+        gap: 2px;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .categories-horizontal {
+        grid-template-columns: 1fr;
+    }
+    
+    .history-grid {
+        grid-template-columns: repeat(5, 1fr);
+    }
+    
+    .history-item {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+    
+    .history-number-large {
+        margin: 0 auto;
+    }
+    
+    button {
+        padding: 10px 15px;
+        font-size: 1em;
+    }
+    
+    .undo-counter {
+        padding: 10px;
+        min-width: 60px;
+    }
+
+    .streak-history-items {
+        grid-template-columns: 1fr;
+    }
+
+    .streak-history-header {
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+    }
+
+    .hot-item-label,
+    .streak-history-item-label {
+        flex-direction: column;
+        gap: 4px;
+        text-align: center;
+    }
+
+    .segment-info,
+    .number-info {
+        font-size: 0.8em;
+        opacity: 0.8;
+    }
+
+    input {
+        width: 150px;
+    }
+}
