@@ -1,0 +1,332 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mega Wheel Tracker - VER.1</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1000px;
+      margin: 20px auto;
+      padding: 0 15px;
+      background: #f9f9f9;
+    }
+    h1, h2, h3 { color: #333; margin-top: 25px; }
+    .container { margin-bottom: 25px; }
+    .input-group {
+      display: flex; gap: 10px; margin: 10px 0; flex-wrap: wrap; align-items: center;
+    }
+    input, button {
+      padding: 8px; border: 1px solid #ccc; border-radius: 4px;
+    }
+    button {
+      background: #4A90E2; color: #fff; cursor: pointer;
+    }
+    button:hover { opacity: 0.9; }
+    .undo-btn { background: #f39c12; }
+    .number-btn {
+      background: var(--color); color: #000; font-weight: bold;
+    }
+    .card {
+      background: #fff; padding: 10px; border-radius: 4px; margin-top: 10px;
+      border-left: 4px solid var(--color, #999);
+      display: flex; justify-content: space-between;
+    }
+    .list { max-height: 220px; overflow-y: auto; border: 1px solid #ddd; padding: 8px; }
+    .error { color: red; margin-top: 5px; }
+    .section { border-top: 1px solid #ddd; padding-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Mega Wheel Tracker - VER.1</h1>
+
+  <!-- INPUT -->
+  <div class="container">
+    <h2>INPUT</h2>
+    <p><strong>MANUAL</strong> — Bisa menambahkan banyak angka sekaligus, dipisahkan dengan spasi</p>
+    <p><strong>PICK NUMBER</strong> — Bisa memilih angka cepat</p>
+    <p><strong>UNDO</strong> — Membatalkan input terakhir</p>
+    <div class="input-group">
+      <input type="text" id="textInput" placeholder="Contoh: 5 10 15"/>
+      <button onclick="processTextInput()">Add</button>
+      <button class="undo-btn" onclick="undoLastSpin()">Undo</button>
+    </div>
+    <div class="input-group" id="quickButtons"></div>
+    <div id="errorMessage" class="error"></div>
+  </div>
+
+  <!-- ANALYTIC -->
+  <div class="container">
+    <h2>ANALYTIC</h2>
+    <div id="analyticsOutput" class="card"></div>
+    <div id="distributionOutput" class="list"></div>
+  </div>
+
+  <!-- STRATEGY -->
+  <div class="container">
+    <h2>STRATEGY</h2>
+    <div id="strategyOutput" class="list"></div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="container">
+    <h2>HISTORY</h2>
+    <label>Filter max: <input type="number" id="historyFilterInput" min="1" value="50"/></label>
+    <button onclick="renderHistory()">Apply</button>
+    <div id="historyList" class="list"></div>
+  </div>
+
+  <!-- STREAK -->
+  <div class="container section">
+    <h2>STREAK</h2>
+    <div class="input-group">
+      <label>Threshold ≥ <input type="number" id="thresholdInput" min="1" max="100"/></label>
+      <button onclick="updateThreshold()">Update</button>
+    </div>
+    <h3>STREAK - HAPPENING</h3>
+    <div id="streakHappeningList" class="list"></div>
+
+    <h3>STREAK - COMPLETED</h3>
+    <label>Filter ≥ <input type="number" id="streakFilterInput" min="1" value="1"/></label>
+    <button onclick="renderStreakHistory()">Filter</button>
+    <div id="streakHistoryList" class="list"></div>
+
+    <h3>STREAK - GAP & INTERVAL</h3>
+    <div id="gapAnalysisList" class="list"></div>
+  </div>
+
+  <button onclick="resetData()" style="background:#e74c3c;margin-top:20px;">Reset All Data</button>
+
+  <script>
+    // ==================== DATA MODEL ====================
+    const megaWheelNumbers = [
+      { number: 1, segments: 20, color: "#FDEEC9", prob: "Sangat tinggi" },
+      { number: 2, segments: 13, color: "#F5A623", prob: "Tinggi" },
+      { number: 5, segments: 7, color: "#4A90E2", prob: "Sedang" },
+      { number: 8, segments: 4, color: "#9B51E0", prob: "Rendah" },
+      { number: 10, segments: 4, color: "#F25C3B", prob: "Rendah" },
+      { number: 15, segments: 2, color: "#F2994A", prob: "Sangat rendah" },
+      { number: 20, segments: 2, color: "#6FCF97", prob: "Sangat rendah" },
+      { number: 30, segments: 1, color: "#6C5CE7", prob: "Ekstrem" },
+      { number: 40, segments: 1, color: "#E0BBFF", prob: "Ekstrem" }
+    ];
+    const VALID_NUMBERS = megaWheelNumbers.map(n => n.number);
+    const MAX_HISTORY = 200;
+    const MAX_STREAK_HISTORY = 500;
+
+    let streakData = {};
+    let historyData = [];
+    let streakHistory = [];
+    let threshold = 10;
+    let undoStack = [];
+
+    // ==================== INIT ====================
+    function init() {
+      VALID_NUMBERS.forEach(num => {
+        streakData[num] = { streak: 0, lastAppearance: null, lastTimestamp: null };
+      });
+      renderQuickButtons();
+      updateDisplay();
+    }
+
+    function renderQuickButtons() {
+      const container = document.getElementById("quickButtons");
+      container.innerHTML = "";
+      VALID_NUMBERS.forEach(num => {
+        const btn = document.createElement("button");
+        const color = megaWheelNumbers.find(n => n.number === num).color;
+        btn.className = "number-btn";
+        btn.style.setProperty("--color", color);
+        btn.textContent = num;
+        btn.onclick = () => addWinningNumbers([num]);
+        container.appendChild(btn);
+      });
+    }
+
+    // ==================== INPUT ====================
+    function parseInput(input) {
+      const tokens = input.replace(/,/g, " ").trim().split(/\s+/);
+      const nums = tokens.map(t => parseInt(t)).filter(n => !isNaN(n));
+      const valid = nums.filter(n => VALID_NUMBERS.includes(n));
+      const invalid = nums.filter(n => !VALID_NUMBERS.includes(n));
+      return { valid, invalid };
+    }
+
+    function processTextInput() {
+      const input = document.getElementById("textInput").value;
+      const { valid, invalid } = parseInput(input);
+      if (invalid.length > 0) {
+        showError("Invalid numbers: " + invalid.join(", "));
+        return;
+      }
+      if (valid.length === 0) {
+        showError("No valid numbers.");
+        return;
+      }
+      addWinningNumbers(valid);
+      document.getElementById("textInput").value = "";
+      clearError();
+    }
+
+    function showError(msg) {
+      document.getElementById("errorMessage").textContent = msg;
+    }
+    function clearError() {
+      document.getElementById("errorMessage").textContent = "";
+    }
+
+    function saveStateForUndo() {
+      undoStack.push({
+        streakData: JSON.parse(JSON.stringify(streakData)),
+        historyData: JSON.parse(JSON.stringify(historyData)),
+        streakHistory: JSON.parse(JSON.stringify(streakHistory))
+      });
+      if (undoStack.length > 50) undoStack.shift();
+    }
+
+    function addWinningNumbers(winningNumbers) {
+      saveStateForUndo();
+      const nowIso = new Date().toISOString();
+      VALID_NUMBERS.forEach(num => {
+        if (winningNumbers.includes(num)) {
+          if (streakData[num].streak > 0) {
+            streakHistory.unshift({
+              number: num, streakLength: streakData[num].streak,
+              endedAt: nowIso
+            });
+            if (streakHistory.length > MAX_STREAK_HISTORY)
+              streakHistory = streakHistory.slice(0, MAX_STREAK_HISTORY);
+          }
+          streakData[num].streak = 0;
+          streakData[num].lastAppearance = nowIso;
+          streakData[num].lastTimestamp = nowIso;
+        } else {
+          streakData[num].streak++;
+        }
+      });
+      winningNumbers.forEach(num => historyData.unshift({ number: num, timestamp: nowIso }));
+      if (historyData.length > MAX_HISTORY) historyData = historyData.slice(0, MAX_HISTORY);
+      updateDisplay();
+    }
+
+    function undoLastSpin() {
+      if (undoStack.length === 0 || historyData.length === 0) {
+        alert("No action to undo.");
+        return;
+      }
+      const lastState = undoStack.pop();
+      streakData = lastState.streakData;
+      historyData = lastState.historyData;
+      streakHistory = lastState.streakHistory;
+      updateDisplay();
+    }
+
+    // ==================== DISPLAY ====================
+    function updateDisplay() {
+      renderAnalytics();
+      renderDistribution();
+      renderStrategy();
+      renderHistory();
+      renderStreakHappening();
+      renderStreakHistory();
+      renderGapAnalysis();
+    }
+
+    function renderAnalytics() {
+      const totalSpins = historyData.length;
+      const freq = {};
+      historyData.forEach(h => { freq[h.number] = (freq[h.number] || 0) + 1; });
+      const hottest = Object.entries(freq).reduce((a,b) => a[1]>b[1]?a:b, ["-",0]);
+      const coldest = Object.entries(streakData).reduce((a,b) => a[1].streak>b[1].streak?a:b, [0,{streak:0}]);
+      document.getElementById("analyticsOutput").innerHTML = `
+        <span>Total Spins: ${totalSpins}</span>
+        <span>Hottest: ${hottest[0]} (${hottest[1]}x)</span>
+        <span>Coldest: ${coldest[0]} (Streak ${coldest[1].streak})</span>
+      `;
+    }
+
+    function renderDistribution() {
+      const freq = {};
+      historyData.forEach(h => { freq[h.number] = (freq[h.number] || 0) + 1; });
+      document.getElementById("distributionOutput").innerHTML =
+        megaWheelNumbers.map(n => `
+          <div class="card" style="--color:${n.color}">
+            <span><strong>${n.number}</strong></span>
+            <span>Freq: ${freq[n.number]||0} | Prob: ${n.prob}</span>
+          </div>
+        `).join("");
+    }
+
+    function renderStrategy() {
+      let strategies = [];
+      const coldest = Object.entries(streakData).reduce((a,b) => a[1].streak>b[1].streak?a:b);
+      strategies.push("Angka dengan streak terpanjang (potensi segera muncul): " + coldest[0]);
+      const freq = {};
+      historyData.forEach(h => { freq[h.number] = (freq[h.number]||0)+1; });
+      const hottest = Object.entries(freq).reduce((a,b)=>a[1]>b[1]?a:b,["-",0]);
+      strategies.push("Angka yang paling sering keluar: " + hottest[0]);
+      document.getElementById("strategyOutput").innerHTML = strategies.map(s=>"<p>"+s+"</p>").join("");
+    }
+
+    function renderHistory() {
+      const max = parseInt(document.getElementById("historyFilterInput").value) || 50;
+      document.getElementById("historyList").innerHTML =
+        historyData.slice(0,max).map(h => {
+          const color = megaWheelNumbers.find(n => n.number===h.number).color;
+          return `<div class="card" style="--color:${color}"><span>${h.number}</span><span>${new Date(h.timestamp).toLocaleString()}</span></div>`;
+        }).join("");
+    }
+
+    function renderStreakHappening() {
+      const happening = Object.entries(streakData).filter(([num,d])=>d.streak>=threshold);
+      document.getElementById("streakHappeningList").innerHTML =
+        happening.map(([num,d])=>{
+          const color = megaWheelNumbers.find(n=>n.number===parseInt(num)).color;
+          return `<div class="card" style="--color:${color}"><span>${num}</span><span>Streak: ${d.streak}</span></div>`;
+        }).join("") || "<p>No streak meeting threshold</p>";
+    }
+
+    function renderStreakHistory() {
+      const filterVal = parseInt(document.getElementById("streakFilterInput").value)||1;
+      const filtered = streakHistory.filter(s=>s.streakLength>=filterVal).slice(0,50);
+      document.getElementById("streakHistoryList").innerHTML =
+        filtered.map(s=>{
+          const color = megaWheelNumbers.find(n=>n.number===s.number).color;
+          return `<div class="card" style="--color:${color}"><span>${s.number}</span><span>Streak: ${s.streakLength}</span></div>`;
+        }).join("") || "<p>No streaks</p>";
+    }
+
+    function renderGapAnalysis() {
+      document.getElementById("gapAnalysisList").innerHTML =
+        VALID_NUMBERS.map(num=>{
+          const streaks = streakHistory.filter(s=>s.number===num).map(s=>s.streakLength);
+          if(streaks.length===0 && streakData[num].streak===0) return "";
+          const avg = streaks.length>0?(streaks.reduce((a,b)=>a+b,0)/streaks.length).toFixed(1):"–";
+          return `<div class="card" style="--color:${megaWheelNumbers.find(n=>n.number===num).color}">
+            <span>${num}</span>
+            <span>Avg Gap: ${avg} | Current: ${streakData[num].streak}</span>
+          </div>`;
+        }).join("");
+    }
+
+    // ==================== CONFIG ====================
+    function updateThreshold() {
+      const val = parseInt(document.getElementById("thresholdInput").value);
+      if(!isNaN(val)) threshold = val;
+      renderStreakHappening();
+    }
+    function resetData() {
+      if(!confirm("Reset all data?")) return;
+      streakData = {}; historyData=[]; streakHistory=[]; undoStack=[];
+      VALID_NUMBERS.forEach(num=>streakData[num]={streak:0,lastAppearance:null,lastTimestamp:null});
+      updateDisplay();
+    }
+
+    // ==================== START ====================
+    window.onload = init;
+  </script>
+</body>
+</html>
+```
