@@ -1,164 +1,397 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mega Wheel Tracker - Kategori</title>
-    
-    <!-- CSS Files -->
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/responsive.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mega Wheel Streak Tracker v3</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 0 15px;
+      background: #f9f9f9;
+    }
+    h1, h2, h3 { color: #333; }
+    .container { margin-bottom: 20px; }
+    .input-group {
+      display: flex;
+      gap: 10px;
+      margin: 10px 0;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    input, button, select {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      background: #4A90E2;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover { opacity: 0.9; }
+    .undo-btn {
+      background: #f39c12;
+    }
+    .number-btn {
+      background: var(--color);
+      color: black;
+      font-weight: bold;
+    }
+    .streak-item, .history-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px;
+      margin: 4px 0;
+      background: #fff;
+      border-left: 4px solid var(--color);
+    }
+    .error { color: red; margin-top: 5px; }
+    .analytics { background: #eef; padding: 10px; border-radius: 4px; margin-top: 15px; }
+    .history-list, .streak-history-list {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      padding: 8px;
+      margin-top: 8px;
+    }
+    .section { border-top: 1px solid #eee; padding-top: 20px; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🎯 Mega Wheel Tracker</h1>
-            <div class="current-number" id="currentNumber">--</div>
-        </div>
-
-        <!-- Categories Horizontal Layout -->
-        <div class="categories-horizontal">
-            <!-- MEGA WHEEL NUMBERS -->
-            <div class="category-group">
-                <h3>MEGA WHEEL NUMBERS</h3>
-                <div class="category-item">
-                    <span class="category-label">
-                        <span class="bullet bullet-green"></span>
-                        1 (20 segmen)
-                    </span>
-                    <span class="streak-value streak-normal" id="n1-value">00</span>
-                </div>
-                <div class="category-item">
-                    <span class="category-label">2 (13 segmen)</span>
-                    <span class="streak-value streak-normal" id="n2-value">00</span>
-                </div>
-                <div class="category-item">
-                    <span class="category-label">5 (7 segmen)</span>
-                    <span class="streak-value streak-normal" id="n5-value">00</span>
-                </div>
-                <div class="category-item">
-                    <span class="category-label">8 (4 segmen)</span>
-                    <span class="streak-value streak-normal" id="n8-value">00</span>
-                </div>
-                <div class="category-item">
-                    <span class="category-label">10 (4 segmen)</span>
-                    <span class="streak-value streak-normal" id="n10-value">00</span>
-                </div>
-                <div class="category-item">
-                    <span class="category-label">15 (2 segmen)</span>
-                    <span class="streak-value streak-normal" id="n15-value">00</span>
-                </div>
-                <div class="category-item">
-                    <span class="category-label">20 (2 segmen)</span>
-                    <span class="streak-value streak-normal" id="n20-value">00</span>
-                </div>
-                <div class="category-item">
-                    <span class="category-label">30 (1 segmen)</span>
-                    <span class="streak-value streak-normal" id="n30-value">00</span>
-                </div>
-                <div class="category-item">
-                    <span class="category-label">40 (1 segmen)</span>
-                    <span class="streak-value streak-normal" id="n40-value">00</span>
-                </div>
-            </div>
-
-            <!-- MULTIPLIER INFO -->
-            <div class="category-group">
-                <h3>MULTIPLIER INFO</h3>
-                <div class="multiplier-info">
-                    <div class="multiplier-item">
-                        <span class="multiplier-label">1:</span>
-                        <span class="multiplier-value">Max x100</span>
-                    </div>
-                    <div class="multiplier-item">
-                        <span class="multiplier-label">2:</span>
-                        <span class="multiplier-value">Max x200</span>
-                    </div>
-                    <div class="multiplier-item">
-                        <span class="multiplier-label">5,8,10:</span>
-                        <span class="multiplier-value">Max x250</span>
-                    </div>
-                    <div class="multiplier-item">
-                        <span class="multiplier-label">15,20,30,40:</span>
-                        <span class="multiplier-value">Max x500</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- HOT KATEGORI Section -->
-        <div class="hot-categories-section">
-            <div class="hot-categories">
-                <div class="hot-title">STREAK</div>
-                <div class="hot-threshold-row">
-                    <div class="hot-threshold-control">
-                        <label for="hotThreshold">Threshold</label>
-                        <input type="number" id="hotThreshold" min="1" max="999" value="5">
-                    </div>
-                </div>
-                <div class="hot-content" id="hotContent">
-                    <div class="no-hot-categories" id="noHotCategories">
-                        Belum ada Streak
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- STREAK HISTORY Section -->
-        <div class="streak-history-section">
-            <div class="streak-history">
-                <div class="streak-history-title">STREAK HISTORY</div>
-                <div class="streak-history-content" id="streakHistoryContent">
-                    <div class="no-streak-history" id="noStreakHistory">
-                        Belum ada Streak History
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Controls dengan Undo -->
-        <div class="controls">
-            <div class="main-controls">
-                <input type="text" id="numberInput" placeholder="1,2,5,8,10,15,20,30,40" maxlength="2">
-                <button id="addNumberBtn">TAMBAH</button>
-                <button id="resetBtn">RESET</button>
-            </div>
-            <div class="undo-controls">
-                <button class="undo-btn" id="undoBtn" disabled>UNDO</button>
-                <div class="undo-counter" id="undoCounter">↩️ 0/5</div>
-            </div>
-        </div>
-
-        <!-- History Sections -->
-        <div class="history-sections">
-            <div class="history-section">
-                <div class="history-title">HISTORY GRID (Last 100 Numbers)</div>
-                <div class="history-grid" id="historyGrid"></div>
-                <div class="history-counter" id="gridCounter">Total: 0 numbers</div>
-            </div>
-            <div class="history-section">
-                <div class="history-title">DETAIL HISTORY</div>
-                <div class="vertical-history" id="verticalHistory"></div>
-                <div class="history-counter" id="verticalCounter">Total: 0 numbers</div>
-            </div>
-        </div>
+  <h1>Mega Wheel Streak Tracker v3</h1>
+  <!-- Input Section -->
+  <div class="container">
+    <h2>Input Winning Numbers</h2>
+    <div class="input-group">
+      <input type="text" id="textInput" placeholder="e.g., 5,10,15 or 5 10 15" />
+      <button onclick="processTextInput()">Add</button>
+      <button class="undo-btn" onclick="undoLastSpin()">Undo Last Spin</button>
     </div>
+    <div class="input-group" id="quickButtons"></div>
+    <div class="input-group">
+      <label>Streak Threshold: <input type="number" id="thresholdInput" min="1" max="100" /></label>
+      <button onclick="updateThreshold()">Update</button>
+    </div>
+    <div id="errorMessage" class="error"></div>
+  </div>
 
-    <!-- JavaScript Files -->
-    <script src="js/config/constants.js"></script>
-    <script src="js/config/megawheel-data.js"></script>
-    <script src="js/utils/error-handler.js"></script>
-    <script src="js/utils/storage.js"></script>
-    <script src="js/utils/helpers.js"></script>
-    <script src="js/core/validator.js"></script>
-    <script src="js/core/streak-manager.js"></script>
-    <script src="js/core/state-manager.js"></script>
-    <script src="js/ui/dom-manager.js"></script>
-    <script src="js/ui/hot-categories.js"></script>
-    <script src="js/ui/history-manager.js"></script>
-    <script src="js/ui/streak-history-manager.js"></script>
-    <script src="js/ui/notification.js"></script>
-    <script src="js/app.js"></script>
-    <script src="js/utils/init.js"></script>
+  <!-- Streak Happening -->
+  <div class="container">
+    <h2>Streak Happening (≥ Threshold)</h2>
+    <div id="streakHappeningList"></div>
+    <div>Last Updated: <span id="lastUpdated"></span></div>
+  </div>
+
+  <!-- Analytics -->
+  <div class="container analytics">
+    <h3>Analytics</h3>
+    <div id="analyticsOutput"></div>
+  </div>
+
+  <!-- Recent History (with color) -->
+  <div class="container">
+    <h3>Recent History (max 200)</h3>
+    <div id="historyList" class="history-list"></div>
+  </div>
+
+  <!-- Streak History -->
+  <div class="container section">
+    <h3>Completed Streaks History</h3>
+    <div class="input-group">
+      <label>Show streaks ≥: <input type="number" id="streakFilterInput" min="1" value="1" /></label>
+      <button onclick="renderStreakHistory()">Filter</button>
+    </div>
+    <div id="streakHistoryList" class="streak-history-list"></div>
+  </div>
+
+  <button onclick="resetData()" style="background:#e74c3c">Reset All Data</button>
+
+  <script>
+    // =============== DATA MODEL ===============
+    const megaWheelNumbers = [
+      { number: 1, segments: 20, color: "#FDEEC9" },
+      { number: 2, segments: 13, color: "#F5A623" },
+      { number: 5, segments: 7, color: "#4A90E2" },
+      { number: 8, segments: 4, color: "#9B51E0" },
+      { number: 10, segments: 4, color: "#F25C3B" },
+      { number: 15, segments: 2, color: "#F2994A" },
+      { number: 20, segments: 2, color: "#6FCF97" },
+      { number: 30, segments: 1, color: "#6C5CE7" },
+      { number: 40, segments: 1, color: "#E0BBFF" }
+    ];
+    const VALID_NUMBERS = megaWheelNumbers.map(n => n.number);
+    const MAX_HISTORY = 200;
+
+    // =============== STATE ===============
+    let streakData = {};
+    let historyData = [];
+    let streakHistory = [];
+    let threshold = 10;
+    let undoStack = []; // Menyimpan snapshot untuk undo
+
+    // =============== INIT ===============
+    function init() {
+      const savedStreak = localStorage.getItem('megaWheelStreakData');
+      const savedHistory = localStorage.getItem('megaWheelHistoryData');
+      const savedStreakHistory = localStorage.getItem('megaWheelStreakHistory');
+      const savedThreshold = localStorage.getItem('megaWheelThreshold');
+      
+      if (savedStreak) streakData = JSON.parse(savedStreak);
+      if (savedHistory) historyData = JSON.parse(savedHistory);
+      if (savedStreakHistory) streakHistory = JSON.parse(savedStreakHistory);
+      if (savedThreshold) threshold = parseInt(savedThreshold) || 10;
+
+      VALID_NUMBERS.forEach(num => {
+        if (!streakData[num]) {
+          streakData[num] = { streak: 0, lastAppearance: null, lastUpdated: new Date().toISOString() };
+        }
+      });
+
+      document.getElementById('thresholdInput').value = threshold;
+      renderQuickButtons();
+      updateDisplay();
+    }
+
+    function renderQuickButtons() {
+      const container = document.getElementById('quickButtons');
+      container.innerHTML = '';
+      VALID_NUMBERS.forEach(num => {
+        const btn = document.createElement('button');
+        const color = megaWheelNumbers.find(n => n.number === num).color;
+        btn.className = 'number-btn';
+        btn.style.setProperty('--color', color);
+        btn.textContent = num;
+        btn.onclick = () => addWinningNumbers([num]);
+        container.appendChild(btn);
+      });
+    }
+
+    // =============== INPUT PROCESSING ===============
+    function parseInput(input) {
+      if (!input) return { valid: [], invalid: [] };
+      const cleaned = input.replace(/,/g, ' ').trim();
+      const tokens = cleaned.split(/\s+/).filter(t => t !== '');
+      const nums = tokens.map(t => parseInt(t, 10)).filter(n => !isNaN(n));
+      const valid = [...new Set(nums.filter(n => VALID_NUMBERS.includes(n)))]; // ✅ DEDUPLIKASI
+      const invalid = nums.filter(n => !VALID_NUMBERS.includes(n));
+      return { valid, invalid };
+    }
+
+    function processTextInput() {
+      const input = document.getElementById('textInput').value;
+      const { valid, invalid } = parseInput(input);
+      if (invalid.length > 0) {
+        showError(`Invalid numbers: ${invalid.join(', ')}. Valid: ${VALID_NUMBERS.join(', ')}`);
+        return;
+      }
+      if (valid.length === 0) {
+        showError('No valid numbers found.');
+        return;
+      }
+      addWinningNumbers(valid);
+      document.getElementById('textInput').value = '';
+      clearError();
+    }
+
+    function showError(msg) {
+      document.getElementById('errorMessage').textContent = msg;
+    }
+    function clearError() {
+      document.getElementById('errorMessage').textContent = '';
+    }
+
+    // =============== STREAK LOGIC WITH UNDO ===============
+    function saveStateForUndo() {
+      undoStack.push({
+        streakData: JSON.parse(JSON.stringify(streakData)),
+        historyData: JSON.parse(JSON.stringify(historyData)),
+        streakHistory: JSON.parse(JSON.stringify(streakHistory))
+      });
+      // Batasi stack agar tidak terlalu besar
+      if (undoStack.length > 50) {
+        undoStack.shift();
+      }
+    }
+
+    function addWinningNumbers(winningNumbers) {
+      saveStateForUndo(); // Simpan state SEBELUM perubahan
+
+      const now = new Date().toISOString();
+
+      VALID_NUMBERS.forEach(num => {
+        if (winningNumbers.includes(num)) {
+          if (streakData[num].streak >= 1) {
+            streakHistory.unshift({
+              number: num,
+              streakLength: streakData[num].streak,
+              endedAt: now
+            });
+            if (streakHistory.length > 500) {
+              streakHistory = streakHistory.slice(0, 500);
+            }
+          }
+          streakData[num].streak = 0;
+          streakData[num].lastAppearance = now;
+        } else {
+          streakData[num].streak += 1;
+        }
+        streakData[num].lastUpdated = now;
+      });
+
+      winningNumbers.forEach(num => {
+        historyData.unshift({ number: num, timestamp: now });
+      });
+      if (historyData.length > MAX_HISTORY) {
+        historyData = historyData.slice(0, MAX_HISTORY);
+      }
+
+      saveToStorage();
+      updateDisplay();
+    }
+
+    function undoLastSpin() {
+      if (undoStack.length === 0 || historyData.length === 0) {
+        alert('No action to undo.');
+        return;
+      }
+      const lastState = undoStack.pop();
+      streakData = lastState.streakData;
+      historyData = lastState.historyData;
+      streakHistory = lastState.streakHistory;
+      saveToStorage();
+      updateDisplay();
+    }
+
+    // =============== THRESHOLD ===============
+    function updateThreshold() {
+      const val = parseInt(document.getElementById('thresholdInput').value);
+      if (isNaN(val) || val < 1 || val > 100) {
+        showError('Threshold must be between 1 and 100.');
+        return;
+      }
+      threshold = val;
+      localStorage.setItem('megaWheelThreshold', threshold);
+      clearError();
+      updateDisplay();
+    }
+
+    // =============== DISPLAY ===============
+    function updateDisplay() {
+      renderStreakHappening();
+      renderAnalytics();
+      renderHistory();
+      renderStreakHistory();
+      document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return 'Never';
+      const d = new Date(dateStr);
+      return isNaN(d.getTime()) ? 'Invalid Date' : d.toLocaleString();
+    }
+
+    function renderStreakHappening() {
+      const list = document.getElementById('streakHappeningList');
+      const happening = Object.entries(streakData)
+        .filter(([num, data]) => data.streak >= threshold)
+        .sort((a, b) => b[1].streak - a[1].streak);
+      if (happening.length === 0) {
+        list.innerHTML = '<p>No numbers meet the threshold.</p>';
+        return;
+      }
+      list.innerHTML = happening.map(([num, data]) => {
+        const color = megaWheelNumbers.find(n => n.number === parseInt(num)).color;
+        const last = formatDate(data.lastAppearance);
+        return `
+          <div class="streak-item" style="--color:${color}">
+            <span><strong>${num}</strong> — Streak: ${data.streak}</span>
+            <span>Last: ${last}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderAnalytics() {
+      const totalSpins = historyData.length;
+      const coldest = Object.entries(streakData).reduce((a, b) => a[1].streak > b[1].streak ? a : b);
+      const freq = {};
+      historyData.forEach(h => {
+        freq[h.number] = (freq[h.number] || 0) + 1;
+      });
+      const hottest = Object.entries(freq).length > 0
+        ? Object.entries(freq).reduce((a, b) => a[1] > b[1] ? a : b)
+        : ['-', 0];
+      document.getElementById('analyticsOutput').innerHTML = `
+        <p><strong>Total Spins:</strong> ${totalSpins}</p>
+        <p><strong>Coldest Number:</strong> ${coldest[0]} (Streak: ${coldest[1].streak})</p>
+        <p><strong>Hottest Number:</strong> ${hottest[0]} (Appeared ${hottest[1]} times)</p>
+        <p><strong>Completed Streaks:</strong> ${streakHistory.length}</p>
+      `;
+    }
+
+    function renderHistory() {
+      const list = document.getElementById('historyList');
+      if (historyData.length === 0) {
+        list.innerHTML = '<p>No history yet.</p>';
+        return;
+      }
+      list.innerHTML = historyData.map(h => {
+        const color = megaWheelNumbers.find(n => n.number === h.number).color;
+        return `
+          <div class="history-item" style="--color:${color}">
+            <span><strong>${h.number}</strong></span>
+            <span>${formatDate(h.timestamp)}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderStreakHistory() {
+      const filterVal = parseInt(document.getElementById('streakFilterInput').value) || 1;
+      const list = document.getElementById('streakHistoryList');
+      const filtered = streakHistory
+        .filter(s => s.streakLength >= filterVal)
+        .slice(0, 100);
+      if (filtered.length === 0) {
+        list.innerHTML = '<p>No completed streaks match the filter.</p>';
+        return;
+      }
+      list.innerHTML = filtered.map(s => {
+        const color = megaWheelNumbers.find(n => n.number === s.number).color;
+        return `
+          <div class="streak-item" style="--color:${color}">
+            <span><strong>${s.number}</strong> — Streak: ${s.streakLength}</span>
+            <span>Ended: ${formatDate(s.endedAt)}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // =============== PERSISTENCE ===============
+    function saveToStorage() {
+      localStorage.setItem('megaWheelStreakData', JSON.stringify(streakData));
+      localStorage.setItem('megaWheelHistoryData', JSON.stringify(historyData));
+      localStorage.setItem('megaWheelStreakHistory', JSON.stringify(streakHistory));
+    }
+
+    function resetData() {
+      if (!confirm('Reset all data? This cannot be undone.')) return;
+      streakData = {};
+      historyData = [];
+      streakHistory = [];
+      undoStack = [];
+      VALID_NUMBERS.forEach(num => {
+        streakData[num] = { streak: 0, lastAppearance: null, lastUpdated: new Date().toISOString() };
+      });
+      saveToStorage();
+      updateDisplay();
+    }
+
+    // =============== START ===============
+    window.onload = init;
+  </script>
 </body>
 </html>
