@@ -83,32 +83,26 @@
     <div id="errorMessage" class="error"></div>
   </div>
 
-  <!-- Streak Happening -->
+  <!-- 1. Analytics -->
+  <div class="container analytics">
+    <h3>Analytics</h3>
+    <div id="analyticsOutput"></div>
+  </div>
+
+  <!-- 2. Recent History (with color) -->
+  <div class="container">
+    <h3>Recent History (max 200)</h3>
+    <div id="historyList" class="history-list"></div>
+  </div>
+
+  <!-- 3. Streak Happening -->
   <div class="container">
     <h2>Streak Happening (≥ Threshold)</h2>
     <div id="streakHappeningList"></div>
     <div>Last Updated: <span id="lastUpdated"></span></div>
   </div>
 
-  <!-- Analytics -->
-  <div class="container analytics">
-    <h3>Analytics</h3>
-    <div id="analyticsOutput"></div>
-  </div>
-
-  <!-- Gap & Time Interval Analysis -->
-  <div class="container analytics gap-analysis">
-    <h3>Gap & Time Interval Analysis</h3>
-    <div id="gapAnalysisList" class="gap-list"></div>
-  </div>
-
-  <!-- Recent History (with color) -->
-  <div class="container">
-    <h3>Recent History (max 200)</h3>
-    <div id="historyList" class="history-list"></div>
-  </div>
-
-  <!-- Streak History -->
+  <!-- 4. Completed Streaks History -->
   <div class="container section">
     <h3>Completed Streaks History</h3>
     <div class="input-group">
@@ -116,6 +110,12 @@
       <button onclick="renderStreakHistory()">Filter</button>
     </div>
     <div id="streakHistoryList" class="streak-history-list"></div>
+  </div>
+
+  <!-- 5. Gap & Time Interval Analysis -->
+  <div class="container analytics gap-analysis">
+    <h3>Gap & Time Interval Analysis</h3>
+    <div id="gapAnalysisList" class="gap-list"></div>
   </div>
 
   <button onclick="resetData()" style="background:#e74c3c">Reset All Data</button>
