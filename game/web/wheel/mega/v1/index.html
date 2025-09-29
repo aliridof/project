@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Mega Wheel Streak Tracker v3</title>
+  <title>Mega Wheel Streak Tracker v4</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -40,7 +40,7 @@
       color: black;
       font-weight: bold;
     }
-    .streak-item, .history-item {
+    .streak-item, .history-item, .gap-item {
       display: flex;
       justify-content: space-between;
       padding: 8px;
@@ -49,8 +49,13 @@
       border-left: 4px solid var(--color);
     }
     .error { color: red; margin-top: 5px; }
-    .analytics { background: #eef; padding: 10px; border-radius: 4px; margin-top: 15px; }
-    .history-list, .streak-history-list {
+    .analytics, .gap-analysis { 
+      background: #eef; 
+      padding: 10px; 
+      border-radius: 4px; 
+      margin-top: 15px; 
+    }
+    .history-list, .streak-history-list, .gap-list {
       max-height: 200px;
       overflow-y: auto;
       border: 1px solid #ddd;
@@ -61,7 +66,7 @@
   </style>
 </head>
 <body>
-  <h1>Mega Wheel Streak Tracker v3</h1>
+  <h1>Mega Wheel Streak Tracker v4</h1>
   <!-- Input Section -->
   <div class="container">
     <h2>Input Winning Numbers</h2>
@@ -89,6 +94,12 @@
   <div class="container analytics">
     <h3>Analytics</h3>
     <div id="analyticsOutput"></div>
+  </div>
+
+  <!-- Gap & Time Interval Analysis -->
+  <div class="container analytics gap-analysis">
+    <h3>Gap & Time Interval Analysis</h3>
+    <div id="gapAnalysisList" class="gap-list"></div>
   </div>
 
   <!-- Recent History (with color) -->
@@ -124,13 +135,14 @@
     ];
     const VALID_NUMBERS = megaWheelNumbers.map(n => n.number);
     const MAX_HISTORY = 200;
+    const MAX_STREAK_HISTORY = 500;
 
     // =============== STATE ===============
     let streakData = {};
     let historyData = [];
-    let streakHistory = [];
+    let streakHistory = []; // { number, streakLength, timeIntervalSec, endedAt }
     let threshold = 10;
-    let undoStack = []; // Menyimpan snapshot untuk undo
+    let undoStack = [];
 
     // =============== INIT ===============
     function init() {
@@ -146,7 +158,12 @@
 
       VALID_NUMBERS.forEach(num => {
         if (!streakData[num]) {
-          streakData[num] = { streak: 0, lastAppearance: null, lastUpdated: new Date().toISOString() };
+          streakData[num] = { 
+            streak: 0, 
+            lastAppearance: null, 
+            lastTimestamp: null,
+            lastUpdated: new Date().toISOString() 
+          };
         }
       });
 
@@ -203,46 +220,51 @@
       document.getElementById('errorMessage').textContent = '';
     }
 
-    // =============== STREAK LOGIC WITH UNDO ===============
+    // =============== STREAK & TIME LOGIC WITH UNDO ===============
     function saveStateForUndo() {
       undoStack.push({
         streakData: JSON.parse(JSON.stringify(streakData)),
         historyData: JSON.parse(JSON.stringify(historyData)),
         streakHistory: JSON.parse(JSON.stringify(streakHistory))
       });
-      // Batasi stack agar tidak terlalu besar
-      if (undoStack.length > 50) {
-        undoStack.shift();
-      }
+      if (undoStack.length > 50) undoStack.shift();
     }
 
     function addWinningNumbers(winningNumbers) {
-      saveStateForUndo(); // Simpan state SEBELUM perubahan
+      saveStateForUndo();
 
-      const now = new Date().toISOString();
+      const now = new Date();
+      const nowIso = now.toISOString();
 
       VALID_NUMBERS.forEach(num => {
         if (winningNumbers.includes(num)) {
-          if (streakData[num].streak >= 1) {
+          const lastTime = streakData[num].lastTimestamp ? new Date(streakData[num].lastTimestamp) : null;
+          let timeIntervalSec = null;
+
+          if (streakData[num].streak >= 1 && lastTime) {
+            timeIntervalSec = Math.round((now - lastTime) / 1000);
             streakHistory.unshift({
               number: num,
               streakLength: streakData[num].streak,
-              endedAt: now
+              timeIntervalSec: timeIntervalSec,
+              endedAt: nowIso
             });
-            if (streakHistory.length > 500) {
-              streakHistory = streakHistory.slice(0, 500);
+            if (streakHistory.length > MAX_STREAK_HISTORY) {
+              streakHistory = streakHistory.slice(0, MAX_STREAK_HISTORY);
             }
           }
+
           streakData[num].streak = 0;
-          streakData[num].lastAppearance = now;
+          streakData[num].lastAppearance = nowIso;
+          streakData[num].lastTimestamp = nowIso;
         } else {
           streakData[num].streak += 1;
         }
-        streakData[num].lastUpdated = now;
+        streakData[num].lastUpdated = nowIso;
       });
 
       winningNumbers.forEach(num => {
-        historyData.unshift({ number: num, timestamp: now });
+        historyData.unshift({ number: num, timestamp: nowIso });
       });
       if (historyData.length > MAX_HISTORY) {
         historyData = historyData.slice(0, MAX_HISTORY);
@@ -282,6 +304,7 @@
     function updateDisplay() {
       renderStreakHappening();
       renderAnalytics();
+      renderGapAnalysis();
       renderHistory();
       renderStreakHistory();
       document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
@@ -291,6 +314,13 @@
       if (!dateStr) return 'Never';
       const d = new Date(dateStr);
       return isNaN(d.getTime()) ? 'Invalid Date' : d.toLocaleString();
+    }
+
+    function formatTime(seconds) {
+      if (seconds === null || seconds === undefined) return '–';
+      if (seconds < 60) return `${seconds}s`;
+      if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
+      return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
     }
 
     function renderStreakHappening() {
@@ -332,6 +362,67 @@
       `;
     }
 
+    // =============== GAP & TIME ANALYSIS ===============
+    function calculateGapStats(number) {
+      const gaps = streakHistory
+        .filter(s => s.number === number)
+        .map(s => s.streakLength);
+
+      const times = streakHistory
+        .filter(s => s.number === number)
+        .map(s => s.timeIntervalSec)
+        .filter(t => t !== null);
+
+      const currentStreak = streakData[number].streak;
+      const count = gaps.length;
+
+      if (count === 0) {
+        return { count, currentStreak };
+      }
+
+      const sumGaps = gaps.reduce((a, b) => a + b, 0);
+      const sumTimes = times.reduce((a, b) => a + b, 0);
+
+      return {
+        count,
+        currentStreak,
+        avgGap: parseFloat((sumGaps / count).toFixed(1)),
+        avgTime: times.length > 0 ? parseFloat((sumTimes / times.length).toFixed(1)) : null,
+        maxGap: Math.max(...gaps),
+        minGap: Math.min(...gaps),
+        maxTime: times.length > 0 ? Math.max(...times) : null,
+        minTime: times.length > 0 ? Math.min(...times) : null
+      };
+    }
+
+    function renderGapAnalysis() {
+      const container = document.getElementById('gapAnalysisList');
+      container.innerHTML = VALID_NUMBERS.map(num => {
+        const stats = calculateGapStats(num);
+        if (stats.count === 0 && stats.currentStreak === 0) return '';
+
+        const color = megaWheelNumbers.find(n => n.number === num).color;
+        const avgGap = stats.avgGap ?? '–';
+        const avgTime = stats.avgTime ? formatTime(stats.avgTime) : '–';
+        const maxGap = stats.maxGap ?? '–';
+        const currentTime = streakData[num].lastTimestamp 
+          ? formatTime(Math.round((new Date() - new Date(streakData[num].lastTimestamp)) / 1000))
+          : '–';
+
+        return `
+          <div class="gap-item" style="--color:${color}">
+            <span><strong>${num}</strong></span>
+            <span>
+              Avg Gap: ${avgGap} | 
+              Avg Time: ${avgTime} | 
+              Max Gap: ${maxGap} | 
+              Current: ${stats.currentStreak} spins (${currentTime})
+            </span>
+          </div>
+        `;
+      }).join('');
+    }
+
     function renderHistory() {
       const list = document.getElementById('historyList');
       if (historyData.length === 0) {
@@ -364,7 +455,10 @@
         return `
           <div class="streak-item" style="--color:${color}">
             <span><strong>${s.number}</strong> — Streak: ${s.streakLength}</span>
-            <span>Ended: ${formatDate(s.endedAt)}</span>
+            <span>
+              Time: ${formatTime(s.timeIntervalSec)} | 
+              Ended: ${formatDate(s.endedAt)}
+            </span>
           </div>
         `;
       }).join('');
@@ -384,7 +478,12 @@
       streakHistory = [];
       undoStack = [];
       VALID_NUMBERS.forEach(num => {
-        streakData[num] = { streak: 0, lastAppearance: null, lastUpdated: new Date().toISOString() };
+        streakData[num] = { 
+          streak: 0, 
+          lastAppearance: null, 
+          lastTimestamp: null, 
+          lastUpdated: new Date().toISOString() 
+        };
       });
       saveToStorage();
       updateDisplay();
