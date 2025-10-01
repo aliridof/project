@@ -1,0 +1,13 @@
+{
+    "name": "Material Theme Builder",
+    "short_name": "Theme Builder",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#6750A4",
+    "theme_color": "#6750A4",
+    "description": "Material Theme Builder",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+    ]
+}
