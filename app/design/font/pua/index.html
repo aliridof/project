@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PUA Character Finder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            color: #555;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            font-family: 'Courier New', monospace;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .result {
+            margin-top: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            display: none;
+        }
+        
+        .result.show {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .char-display {
+            font-size: 80px;
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .info {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .info-content {
+            display: flex;
+            align-items: center;
+            flex: 1;
+            justify-content: space-between;
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            color: #666;
+            font-weight: 600;
+        }
+        
+        .info-value {
+            color: #333;
+            font-family: 'Courier New', monospace;
+            flex: 1;
+        }
+        
+        .copy-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 10px;
+            transition: all 0.2s;
+        }
+        
+        .copy-btn:hover {
+            background: #5568d3;
+        }
+        
+        .copy-btn.copied {
+            background: #4caf50;
+        }
+        
+        .pua-range {
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #1976d2;
+        }
+        
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .error.show {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 PUA Character Finder</h1>
+        <p class="subtitle">Private Use Area Character Lookup</p>
+        
+        <div class="input-group">
+            <label for="hexInput">Masukkan Kode Hex (contoh: F2B4, E000, 10FFFD):</label>
+            <input type="text" id="hexInput" placeholder="F2B4" maxlength="6">
+        </div>
+        
+        <button onclick="findPUA()">Cari Karakter</button>
+        
+        <div class="error" id="error"></div>
+        
+        <div class="result" id="result">
+            <div class="char-display" id="charDisplay"></div>
+            
+            <div class="info">
+                <div class="info-row">
+                    <span class="info-label">Karakter:</span>
+                    <div class="info-content">
+                        <span class="info-value" id="charInfo"></span>
+                        <button class="copy-btn" onclick="copyText('charInfo', this)">Copy</button>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Code Point:</span>
+                    <div class="info-content">
+                        <span class="info-value" id="codePoint"></span>
+                        <button class="copy-btn" onclick="copyText('codePoint', this)">Copy</button>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Decimal:</span>
+                    <div class="info-content">
+                        <span class="info-value" id="decimal"></span>
+                        <button class="copy-btn" onclick="copyText('decimal', this)">Copy</button>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">HTML Entity:</span>
+                    <div class="info-content">
+                        <span class="info-value" id="htmlEntity"></span>
+                        <button class="copy-btn" onclick="copyText('htmlEntity', this)">Copy</button>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Area PUA:</span>
+                    <div class="info-content">
+                        <span class="info-value" id="puaArea"></span>
+                        <button class="copy-btn" onclick="copyText('puaArea', this)">Copy</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="pua-range" id="puaRange"></div>
+        </div>
+    </div>
+
+    <script>
+        function findPUA() {
+            const input = document.getElementById('hexInput').value.trim().toUpperCase();
+            const errorDiv = document.getElementById('error');
+            const resultDiv = document.getElementById('result');
+            
+            errorDiv.classList.remove('show');
+            resultDiv.classList.remove('show');
+            
+            if (!input) {
+                showError('Silakan masukkan kode hex!');
+                return;
+            }
+            
+            if (!/^[0-9A-F]+$/.test(input)) {
+                showError('Kode hex tidak valid! Hanya gunakan karakter 0-9 dan A-F.');
+                return;
+            }
+            
+            const codePointValue = parseInt(input, 16);
+            
+            if (isNaN(codePointValue) || codePointValue > 0x10FFFF) {
+                showError('Code point tidak valid! Harus dalam range Unicode (0-10FFFF).');
+                return;
+            }
+            
+            const puaInfo = getPUAInfo(codePointValue);
+            
+            try {
+                const char = String.fromCodePoint(codePointValue);
+                
+                document.getElementById('charDisplay').textContent = char;
+                document.getElementById('charInfo').textContent = char;
+                document.getElementById('codePoint').textContent = 'U+' + input.padStart(4, '0');
+                document.getElementById('decimal').textContent = codePointValue;
+                document.getElementById('htmlEntity').textContent = '&#' + codePointValue + '; atau &#x' + input + ';';
+                document.getElementById('puaArea').textContent = puaInfo.area;
+                document.getElementById('puaRange').textContent = puaInfo.description;
+                
+                resultDiv.classList.add('show');
+            } catch (e) {
+                showError('Gagal membuat karakter dari code point ini.');
+            }
+        }
+        
+        function getPUAInfo(codePoint) {
+            if (codePoint >= 0xE000 && codePoint <= 0xF8FF) {
+                return {
+                    area: 'BMP Private Use Area',
+                    description: '📌 Range: U+E000 - U+F8FF (Basic Multilingual Plane). Total 6,400 karakter untuk penggunaan pribadi.'
+                };
+            } else if (codePoint >= 0xF0000 && codePoint <= 0xFFFFD) {
+                return {
+                    area: 'Supplementary PUA-A',
+                    description: '📌 Range: U+F0000 - U+FFFFD (Plane 15). Total 65,534 karakter untuk penggunaan pribadi.'
+                };
+            } else if (codePoint >= 0x100000 && codePoint <= 0x10FFFD) {
+                return {
+                    area: 'Supplementary PUA-B',
+                    description: '📌 Range: U+100000 - U+10FFFD (Plane 16). Total 65,534 karakter untuk penggunaan pribadi.'
+                };
+            } else {
+                return {
+                    area: 'Bukan PUA',
+                    description: '⚠️ Code point ini BUKAN termasuk dalam Private Use Area. Ini adalah karakter Unicode standar atau reserved.'
+                };
+            }
+        }
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = '❌ ' + message;
+            errorDiv.classList.add('show');
+        }
+        
+        document.getElementById('hexInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                findPUA();
+            }
+        });
+        
+        document.getElementById('hexInput').addEventListener('input', function(e) {
+            this.value = this.value.toUpperCase();
+        });
+        
+        function copyText(elementId, button) {
+            const text = document.getElementById(elementId).textContent;
+            
+            navigator.clipboard.writeText(text).then(function() {
+                const originalText = button.textContent;
+                button.textContent = '✓ Copied!';
+                button.classList.add('copied');
+                
+                setTimeout(function() {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(function(err) {
+                alert('Gagal copy: ' + err);
+            });
+        }
+    </script>
+</body>
+</html>
