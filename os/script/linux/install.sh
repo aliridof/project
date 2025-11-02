@@ -285,24 +285,72 @@ Description=Guacamole Server
 After=network.target
 
 [Service]
-Type=forking
-ExecStart=/usr/local/sbin/guacd
+Type=simple
+Environment="HOME=/var/lib/guacamole"
+ExecStart=/usr/local/sbin/guacd -f
 Restart=on-failure
 RestartSec=5
+User=root
 
 [Install]
 WantedBy=multi-user.target
 EOF
     
+    # Create home directory for guacd
+    mkdir -p /var/lib/guacamole
+    
     systemctl daemon-reload
     systemctl enable guacd
     systemctl start guacd
     
-    # Verify
-    sleep 2
+    # Wait and verify
+    sleep 3
     if ! systemctl is-active --quiet guacd; then
         log_error "Failed to start guacd"
-        exit 1
+        log_info "Checking guacd status..."
+        systemctl status guacd >> "$LOG_FILE" 2>&1
+        journalctl -xeu guacd -n 20 >> "$LOG_FILE" 2>&1
+        
+        # Try to see what's wrong
+        log_info "Attempting to run guacd manually for debugging..."
+        /usr/local/sbin/guacd -f &
+        GUACD_PID=$!
+        sleep 2
+        
+        if ps -p $GUACD_PID > /dev/null; then
+            log_warn "guacd runs manually but not via systemd, continuing..."
+            kill $GUACD_PID 2>/dev/null || true
+            
+            # Try alternative service configuration
+            cat > /etc/systemd/system/guacd.service <<'EOF'
+[Unit]
+Description=Guacamole Server
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/guacd -f -b 127.0.0.1 -l 4822
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+EOF
+            systemctl daemon-reload
+            systemctl start guacd
+            sleep 2
+            
+            if ! systemctl is-active --quiet guacd; then
+                log_error "Still failed to start guacd via systemd"
+                log_info "Check log file: $LOG_FILE"
+                exit 1
+            fi
+        else
+            log_error "guacd binary may have issues"
+            log_info "Testing library dependencies..."
+            ldd /usr/local/sbin/guacd >> "$LOG_FILE" 2>&1
+            exit 1
+        fi
     fi
     
     log_success "Guacamole Server installed"
@@ -602,12 +650,14 @@ show_menu() {
     echo "Choose an option:"
     echo ""
     echo "  1) Install Guacamole"
-    echo "  2) Uninstall Guacamole"
-    echo "  3) View Installation Log"
-    echo "  4) Check Status"
-    echo "  5) Exit"
+    echo "  2) Uninstall Guacamole (keep packages)"
+    echo "  3) Purge Complete (remove everything)"
+    echo "  4) View Installation Log"
+    echo "  5) Check Status"
+    echo "  6) Debug guacd Issues"
+    echo "  7) Exit"
     echo ""
-    read -p "Enter choice [1-5]: " choice
+    read -p "Enter choice [1-7]: " choice
     
     case $choice in
         1)
@@ -617,6 +667,9 @@ show_menu() {
             uninstall_guacamole
             ;;
         3)
+            purge_complete
+            ;;
+        4)
             if [[ -f "$LOG_FILE" ]]; then
                 less "$LOG_FILE"
             else
@@ -625,12 +678,17 @@ show_menu() {
             read -p "Press Enter to continue..."
             show_menu
             ;;
-        4)
+        5)
             check_status
             read -p "Press Enter to continue..."
             show_menu
             ;;
-        5)
+        6)
+            debug_guacd
+            read -p "Press Enter to continue..."
+            show_menu
+            ;;
+        7)
             echo "Goodbye!"
             exit 0
             ;;
@@ -659,9 +717,64 @@ check_status() {
     echo ""
 }
 
+debug_guacd() {
+    print_banner
+    echo -e "${Y}Debugging guacd service...${NC}"
+    echo ""
+    
+    # Check if guacd binary exists
+    if [[ ! -f /usr/local/sbin/guacd ]]; then
+        echo -e "${R}✗ guacd binary not found at /usr/local/sbin/guacd${NC}"
+        echo "  Guacamole Server may not be installed"
+        return
+    fi
+    
+    echo -e "${G}✓ guacd binary exists${NC}"
+    
+    # Check library dependencies
+    echo ""
+    echo "Checking library dependencies..."
+    if ldd /usr/local/sbin/guacd | grep -q "not found"; then
+        echo -e "${R}✗ Missing library dependencies:${NC}"
+        ldd /usr/local/sbin/guacd | grep "not found"
+        echo ""
+        echo "Run: sudo ldconfig"
+        return
+    fi
+    echo -e "${G}✓ All libraries found${NC}"
+    
+    # Check systemd service status
+    echo ""
+    echo "Service status:"
+    systemctl status guacd --no-pager -l
+    
+    echo ""
+    echo "Recent logs:"
+    journalctl -u guacd -n 30 --no-pager
+    
+    echo ""
+    echo "Attempting to start guacd manually (foreground mode)..."
+    echo "Press Ctrl+C to stop"
+    echo ""
+    /usr/local/sbin/guacd -f -L debug
+}
+
 uninstall_guacamole() {
     print_banner
-    echo -e "${R}WARNING: This will remove Guacamole completely!${NC}"
+    echo -e "${Y}╔══════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${Y}║                                                          ║${NC}"
+    echo -e "${Y}║   UNINSTALL GUACAMOLE (Keep Packages)                   ║${NC}"
+    echo -e "${Y}║                                                          ║${NC}"
+    echo -e "${Y}╚══════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+    echo "This will remove:"
+    echo "  • Guacamole Server & Client"
+    echo "  • Database and configuration"
+    echo "  • Nginx configuration"
+    echo ""
+    echo "This will keep:"
+    echo "  • PostgreSQL, Nginx, Tomcat packages"
+    echo "  • System libraries and dependencies"
     echo ""
     read -p "Are you sure? (type 'yes' to confirm): " confirm
     
@@ -676,20 +789,25 @@ uninstall_guacamole() {
     
     # Stop services
     systemctl stop guacd 2>/dev/null || true
-    systemctl stop tomcat10 2>/dev/null || true
-    systemctl stop tomcat 2>/dev/null || true
     systemctl disable guacd 2>/dev/null || true
     
-    # Remove files
-    rm -rf /etc/guacamole
+    # Remove Guacamole Server
     rm -f /usr/local/sbin/guacd
-    rm -rf /usr/local/lib/libguac*
+    rm -f /usr/local/lib/libguac*
+    rm -rf /usr/local/lib/freerdp*
     rm -f /etc/systemd/system/guacd.service
+    
+    # Remove Guacamole Client
+    rm -rf /etc/guacamole
     rm -f /var/lib/tomcat*/webapps/guacamole.war
     rm -rf /var/lib/tomcat*/webapps/guacamole
-    rm -f /etc/nginx/sites-*/guacamole
+    rm -f /var/lib/tomcat/webapps/guacamole.war
+    rm -rf /var/lib/tomcat/webapps/guacamole
+    
+    # Remove Nginx configuration
+    rm -f /etc/nginx/sites-available/guacamole
+    rm -f /etc/nginx/sites-enabled/guacamole
     rm -f /etc/nginx/conf.d/guacamole.conf
-    rm -rf "$INSTALL_DIR"
     
     # Remove database
     if [[ -f "$INSTALL_DIR/config.env" ]]; then
@@ -698,12 +816,188 @@ uninstall_guacamole() {
         sudo -u postgres psql -c "DROP USER IF EXISTS $DB_USER;" 2>/dev/null || true
     fi
     
+    # Remove installation directory
+    rm -rf "$INSTALL_DIR"
+    
+    # Reload systemd
     systemctl daemon-reload
     
-    log_success "Guacamole uninstalled"
+    # Restart remaining services
+    systemctl restart nginx 2>/dev/null || true
+    
+    log_success "Guacamole uninstalled (packages preserved)"
+    echo ""
+    echo -e "${G}✓ Uninstall complete${NC}"
+    echo -e "${B}Note: PostgreSQL, Nginx, and Tomcat packages are still installed${NC}"
     echo ""
     read -p "Press Enter to continue..."
     show_menu
+}
+
+purge_complete() {
+    print_banner
+    echo -e "${R}╔══════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${R}║                                                          ║${NC}"
+    echo -e "${R}║   ⚠️  PURGE COMPLETE - REMOVE EVERYTHING ⚠️              ║${NC}"
+    echo -e "${R}║                                                          ║${NC}"
+    echo -e "${R}╚══════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+    echo -e "${R}THIS WILL REMOVE:${NC}"
+    echo "  • Guacamole Server & Client"
+    echo "  • Database and ALL data"
+    echo "  • PostgreSQL (including all databases)"
+    echo "  • Tomcat application server"
+    echo "  • Nginx web server"
+    echo "  • All configurations and logs"
+    echo "  • All dependencies and packages"
+    echo ""
+    echo -e "${Y}⚠️  This action is IRREVERSIBLE!${NC}"
+    echo ""
+    read -p "Are you ABSOLUTELY sure? (type 'DELETE' to confirm): " confirm
+    
+    if [[ "$confirm" != "DELETE" ]]; then
+        echo "Cancelled"
+        sleep 2
+        show_menu
+        return
+    fi
+    
+    log_info "Starting complete purge..."
+    echo ""
+    
+    # Stop all services
+    log_info "Stopping services..."
+    systemctl stop guacd 2>/dev/null || true
+    systemctl stop tomcat10 2>/dev/null || true
+    systemctl stop tomcat 2>/dev/null || true
+    systemctl stop nginx 2>/dev/null || true
+    systemctl stop postgresql 2>/dev/null || true
+    
+    # Disable services
+    systemctl disable guacd 2>/dev/null || true
+    systemctl disable tomcat10 2>/dev/null || true
+    systemctl disable tomcat 2>/dev/null || true
+    systemctl disable nginx 2>/dev/null || true
+    systemctl disable postgresql 2>/dev/null || true
+    
+    # Remove Guacamole files
+    log_info "Removing Guacamole files..."
+    rm -rf /etc/guacamole
+    rm -f /usr/local/sbin/guacd
+    rm -f /usr/local/lib/libguac*
+    rm -rf /usr/local/lib/freerdp*
+    rm -f /etc/systemd/system/guacd.service
+    rm -f /var/lib/tomcat*/webapps/guacamole.war
+    rm -rf /var/lib/tomcat*/webapps/guacamole
+    rm -f /etc/nginx/sites-*/guacamole
+    rm -f /etc/nginx/conf.d/guacamole.conf
+    rm -rf "$INSTALL_DIR"
+    
+    # Detect package manager
+    if [[ -f /etc/os-release ]]; then
+        source /etc/os-release
+        case "$ID" in
+            ubuntu|debian)
+                PKG_MGR="apt"
+                ;;
+            centos|rhel|rocky|almalinux|fedora)
+                PKG_MGR="yum"
+                ;;
+        esac
+    fi
+    
+    # Remove packages
+    if [[ "$PKG_MGR" == "apt" ]]; then
+        log_info "Removing packages (APT)..."
+        
+        # Remove Tomcat
+        apt-get purge -y tomcat10 tomcat10-admin tomcat10-common 2>/dev/null || true
+        
+        # Remove PostgreSQL
+        apt-get purge -y postgresql* 2>/dev/null || true
+        
+        # Remove Nginx
+        apt-get purge -y nginx nginx-common 2>/dev/null || true
+        
+        # Remove Java
+        apt-get purge -y openjdk-*-jdk openjdk-*-jre 2>/dev/null || true
+        
+        # Remove build dependencies
+        apt-get purge -y build-essential libcairo2-dev libjpeg-turbo8-dev \
+            libpng-dev libtool-bin libossp-uuid-dev libavcodec-dev \
+            libavformat-dev libavutil-dev libswscale-dev freerdp2-dev \
+            libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev \
+            libwebsockets-dev libpulse-dev libssl-dev libvorbis-dev \
+            libwebp-dev certbot python3-certbot-nginx 2>/dev/null || true
+        
+        # Autoremove
+        apt-get autoremove -y 2>/dev/null || true
+        apt-get autoclean -y 2>/dev/null || true
+        
+    elif [[ "$PKG_MGR" == "yum" ]]; then
+        log_info "Removing packages (YUM/DNF)..."
+        
+        # Remove Tomcat
+        yum remove -y tomcat tomcat-* 2>/dev/null || true
+        
+        # Remove PostgreSQL
+        yum remove -y postgresql* 2>/dev/null || true
+        
+        # Remove Nginx
+        yum remove -y nginx 2>/dev/null || true
+        
+        # Remove Java
+        yum remove -y java-*-openjdk* 2>/dev/null || true
+        
+        # Remove build dependencies
+        yum groupremove -y "Development Tools" 2>/dev/null || true
+        yum remove -y cairo-devel libjpeg-turbo-devel libpng-devel \
+            libtool uuid-devel ffmpeg-devel pango-devel libssh2-devel \
+            libtelnet-devel libvncserver-devel libwebsockets-devel \
+            pulseaudio-libs-devel openssl-devel libvorbis-devel \
+            libwebp-devel certbot python3-certbot-nginx 2>/dev/null || true
+        
+        # Autoremove
+        yum autoremove -y 2>/dev/null || true
+    fi
+    
+    # Remove data directories
+    log_info "Removing data directories..."
+    rm -rf /var/lib/postgresql
+    rm -rf /var/lib/pgsql
+    rm -rf /etc/postgresql
+    rm -rf /var/lib/tomcat*
+    rm -rf /etc/tomcat*
+    rm -rf /var/lib/nginx
+    rm -rf /etc/nginx
+    rm -rf /var/log/postgresql
+    rm -rf /var/log/tomcat*
+    rm -rf /var/log/nginx
+    rm -rf /usr/share/tomcat*
+    rm -rf /usr/share/nginx
+    
+    # Remove temp files
+    rm -rf /tmp/guacamole-*
+    rm -rf /tmp/postgresql-*
+    
+    # Remove logs
+    rm -f "$LOG_FILE"
+    
+    # Reload systemd
+    systemctl daemon-reload
+    
+    echo ""
+    echo -e "${G}╔══════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${G}║                                                          ║${NC}"
+    echo -e "${G}║   ✓ PURGE COMPLETE                                      ║${NC}"
+    echo -e "${G}║                                                          ║${NC}"
+    echo -e "${G}╚══════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+    echo "All Guacamole components and packages have been removed."
+    echo "Your system has been restored to its original state."
+    echo ""
+    read -p "Press Enter to exit..."
+    exit 0
 }
 
 ################################################################################
