@@ -1,7 +1,17 @@
-[SCRIPT]
-  | USER 
-  | APP 
-  | NETWORK 
-[APP] 
-  | DESKTOP
-  | GUACAMOLE 
+
+[=========================]
+SCRIPT 
+[=========================]
+
+MANAGER 
+| USER 
+| APP 
+| NETWORK 
+
+[=========================]
+APP 
+[=========================]
+
+GUI 
+TUI 
+
