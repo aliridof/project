@@ -147,7 +147,7 @@ mkdir -p {mysql,postgres,init,drive,record}
 # Download init script untuk MySQL/MariaDB
 cd ~/guacamole/init
 
-# Ambil versi terbaru (contoh 1.5.4)
+# Ambil versi terbaru (contoh 1.6.0)
 MYSQL 
 wget https://raw.githubusercontent.com/aliridof/project/main/app/protocol/remote/guacamole/docker/1-6-0/mysql/schema/001-create-schema.sql -O 001-create-schema.sql
 wget https://raw.githubusercontent.com/aliridof/project/main/app/protocol/remote/guacamole/docker/1-6-0/mysql/schema/002-create-admin-user.sql -O 002-create-admin-user.sql
