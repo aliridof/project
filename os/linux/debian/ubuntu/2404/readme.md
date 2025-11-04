@@ -1,0 +1,7 @@
+[SCRIPT]
+  | USER 
+  | APP 
+  | NETWORK 
+[APP] 
+  | DESKTOP
+  | GUACAMOLE 
