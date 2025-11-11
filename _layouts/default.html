@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page.title }} - {{ site.title }}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            color: #24292e;
+        }
+        .header {
+            border-bottom: 1px solid #e1e4e8;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .file-list {
+            background: #f6f8fa;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 20px;
+        }
+        .file-item {
+            margin: 10px 0;
+            padding: 8px 12px;
+            background: white;
+            border: 1px solid #e1e4e8;
+            border-radius: 4px;
+        }
+        .folder {
+            font-weight: 600;
+            color: #0366d6;
+        }
+        a {
+            color: #0366d6;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>{{ site.title }}</h1>
+        <p>{{ site.description }}</p>
+    </header>
+    
+    <main>
+        {{ content }}
+    </main>
+    
+    <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e1e4e8;">
+        <p>Generated with ❤️ using Jekyll & GitHub Pages</p>
+    </footer>
+</body>
+</html>
