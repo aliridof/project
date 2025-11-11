@@ -1,3 +1,42 @@
-title: Nama Repository Anda
-description: Deskripsi repository Anda.
-theme: jekyll-theme-cayman
+# _config.yml
+title: "Nama Repository Anda"
+description: "Deskripsi repository Anda"
+baseurl: "/nama-repository"  # Sesuaikan dengan nama repo
+url: "https://username.github.io"  # Ganti dengan username GitHub Anda
+
+# Theme settings
+theme: jekyll-theme-cayman  # atau theme lain
+
+# Build settings
+markdown: kramdown
+permalink: pretty
+
+# Custom settings
+repository: "username/nama-repository"  # Ganti dengan repo Anda
+github_username: "username"  # Ganti dengan username Anda
+
+# Collections untuk pages
+collections:
+  pages:
+    output: true
+    permalink: /:path/
+
+# Defaults
+defaults:
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: "default"
+  - scope:
+      path: "assets"
+      type: "pages" 
+    values:
+      layout: "null"
+
+# Exclude dari processing
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
