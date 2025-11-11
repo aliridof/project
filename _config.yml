@@ -1,8 +1,8 @@
 # _config.yml
-title: "Nama Repository Anda"
-description: "Deskripsi repository Anda"
-baseurl: "/nama-repository"  # Sesuaikan dengan nama repo
-url: "https://username.github.io"  # Ganti dengan username GitHub Anda
+title: "Aliridof - Project"
+description: "Project"
+baseurl: "/project"  # Sesuaikan dengan nama repo
+url: "https://aliridof.github.io"  # Ganti dengan username GitHub Anda
 
 # Theme settings
 theme: jekyll-theme-cayman  # atau theme lain
@@ -12,8 +12,8 @@ markdown: kramdown
 permalink: pretty
 
 # Custom settings
-repository: "username/nama-repository"  # Ganti dengan repo Anda
-github_username: "username"  # Ganti dengan username Anda
+repository: "aliridof/project"  # Ganti dengan repo Anda
+github_username: "aliridof"  # Ganti dengan username Anda
 
 # Collections untuk pages
 collections:
